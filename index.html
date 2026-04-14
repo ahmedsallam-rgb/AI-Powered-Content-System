@@ -41,6 +41,66 @@
     font-size: 14px;
   }
 
+  /* شاشة تسجيل الدخول */
+  .login-screen {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999;
+  }
+  .login-box {
+    background: var(--surface);
+    border: 0.5px solid var(--border2);
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    width: 340px;
+    text-align: center;
+  }
+  .login-logo { font-size: 36px; margin-bottom: 8px; }
+  .login-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .login-sub { font-size: 13px; color: var(--text2); margin-bottom: 1.5rem; }
+  .login-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; text-align: right; }
+  .login-label { font-size: 12px; color: var(--text2); font-weight: 500; }
+  .login-input {
+    width: 100%; padding: 10px 14px;
+    border: 0.5px solid var(--border2); border-radius: var(--radius-sm);
+    font-family: 'Cairo', sans-serif; font-size: 13px;
+    outline: none; background: var(--surface2); color: var(--text);
+    direction: rtl; transition: border-color 0.15s;
+  }
+  .login-input:focus { border-color: var(--blue); background: var(--surface); }
+  .login-btn {
+    width: 100%; padding: 11px;
+    background: var(--blue); color: white; border: none;
+    border-radius: var(--radius-sm); font-family: 'Cairo', sans-serif;
+    font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 8px;
+    transition: opacity 0.15s;
+  }
+  .login-btn:hover { opacity: 0.9; }
+  .login-error { font-size: 12px; color: var(--coral); margin-top: 8px; display: none; }
+  .login-divider { border: none; border-top: 0.5px solid var(--border); margin: 1.25rem 0; }
+
+  /* شريط مفتاح الذكاء الاصطناعي في الأسفل */
+  .api-bar {
+    position: fixed; bottom: 0; left: 0; right: 220px;
+    background: var(--surface); border-top: 0.5px solid var(--border);
+    padding: 7px 1.5rem; display: flex; align-items: center; gap: 10px;
+    z-index: 100; font-size: 12px;
+  }
+  .api-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .api-dot.on { background: #22c55e; }
+  .api-dot.off { background: #f59e0b; }
+  .api-bar input {
+    flex: 1; padding: 5px 12px;
+    border: 0.5px solid var(--border2); border-radius: 20px;
+    font-size: 12px; font-family: monospace;
+    outline: none; background: var(--surface2); color: var(--text);
+    direction: ltr; max-width: 300px;
+  }
+  .api-bar input:focus { border-color: var(--blue); }
+  .api-bar-label { font-size: 12px; color: var(--text2); }
+  .api-save { padding: 5px 14px; background: var(--blue); color: white; border: none; border-radius: 20px; font-size: 12px; font-family: 'Cairo', sans-serif; cursor: pointer; }
+
   /* LAYOUT */
   .app { display: flex; min-height: 100vh; }
 
@@ -501,6 +561,32 @@
 </style>
 </head>
 <body>
+
+<!-- شاشة تسجيل الدخول -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">🌊</div>
+    <div class="login-title">Sahab Agency</div>
+    <div class="login-sub">نظام إدارة المحتوى الداخلي</div>
+    <div class="login-field">
+      <label class="login-label">كلمة السر</label>
+      <input class="login-input" type="password" id="password-input" placeholder="ادخل كلمة السر" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-error" id="login-error">كلمة السر غلط، حاول تاني</div>
+    <button class="login-btn" onclick="doLogin()">دخول</button>
+    <hr class="login-divider">
+    <div style="font-size:11px;color:var(--text3)">للفريق الداخلي فقط — Sahab Agency</div>
+  </div>
+</div>
+
+<!-- شريط مفتاح الذكاء الاصطناعي -->
+<div class="api-bar" id="api-bar" style="display:none">
+  <div class="api-dot off" id="api-dot"></div>
+  <span class="api-bar-label">مفتاح الذكاء الاصطناعي:</span>
+  <input type="password" id="api-key-input" placeholder="sk-ant-..." onkeydown="if(event.key==='Enter')saveApiKey()">
+  <button class="api-save" onclick="saveApiKey()">حفظ</button>
+  <span id="api-status-text" style="font-size:11px;color:var(--text3)">غير متصل</span>
+</div>
 
 <div class="app">
 
@@ -1058,7 +1144,53 @@
 </div>
 
 <script>
-const ANTHROPIC_KEY_NEEDED = true;
+const TEAM_PASSWORD = 'sahab2026';
+let API_KEY = '';
+
+function doLogin() {
+  const val = document.getElementById('password-input').value;
+  if(val === TEAM_PASSWORD) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('api-bar').style.display = 'flex';
+    // لو في مفتاح محفوظ مسبقاً في الجلسة
+    const saved = sessionStorage.getItem('sahab_api_key');
+    if(saved) { API_KEY = saved; updateApiStatus(true); }
+  } else {
+    const err = document.getElementById('login-error');
+    err.style.display = 'block';
+    document.getElementById('password-input').value = '';
+    document.getElementById('password-input').focus();
+    setTimeout(() => err.style.display = 'none', 3000);
+  }
+}
+
+function saveApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if(!key.startsWith('sk-ant-')) {
+    alert('المفتاح غلط — لازم يبدأ بـ sk-ant-');
+    return;
+  }
+  API_KEY = key;
+  sessionStorage.setItem('sahab_api_key', key);
+  document.getElementById('api-key-input').value = '••••••••••••••••';
+  updateApiStatus(true);
+}
+
+function updateApiStatus(connected) {
+  const dot = document.getElementById('api-dot');
+  const txt = document.getElementById('api-status-text');
+  if(connected) {
+    dot.className = 'api-dot on';
+    txt.textContent = 'متصل ✓';
+    txt.style.color = 'var(--green)';
+  } else {
+    dot.className = 'api-dot off';
+    txt.textContent = 'غير متصل';
+    txt.style.color = 'var(--text3)';
+  }
+}
+
+const TEAM_PASSWORD_CHECK = true;
 
 let currentProject = 'khairat';
 let currentType = 'post';
@@ -1168,9 +1300,12 @@ function removeTyping() {
 }
 
 async function callClaude(prompt) {
+  if(!API_KEY) {
+    throw new Error('محتاج تحط مفتاح الذكاء الاصطناعي الأول في الشريط في الأسفل');
+  }
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 1000,
@@ -1178,6 +1313,7 @@ async function callClaude(prompt) {
     })
   });
   const data = await res.json();
+  if(data.error) throw new Error(data.error.message);
   return data.content?.[0]?.text || 'حدث خطأ، حاول تاني.';
 }
 
@@ -1247,7 +1383,7 @@ async function sendMessage() {
     addMessage('ai', response);
   } catch(e) {
     removeTyping();
-    addMessage('ai', '⚠️ حدث خطأ. حاول تاني.');
+    addMessage('ai', '⚠️ ' + (e.message || 'حدث خطأ. حاول تاني.'));
   }
   isLoading = false;
 }
