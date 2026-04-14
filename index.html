@@ -1271,8 +1271,10 @@ function setType(type) {
 function setContentType(type) { currentType = type; showScreen('ai-writer'); setType(type); }
 
 function fixMixedText(text) {
-  // Wrap English words/numbers inside Arabic text so they don't flip direction
   return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/<br>/g, '\n')
     .replace(/\n/g, '<br>')
     .replace(/([A-Za-z0-9][A-Za-z0-9\s\-\_\.\/\(\)]*[A-Za-z0-9]|[A-Za-z0-9])/g, '<bdi>$1</bdi>');
 }
