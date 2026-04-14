@@ -884,15 +884,15 @@
           <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:1rem;">
             <div>
               <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">1. إيه أكتر حاجة اتكلمنا فيها الشهر اللي فات؟</div>
-              <input type="text" placeholder="مثال: وصفات رمضانية وعروض خاصة" style="width:100%;padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:12px;outline:none;direction:rtl;background:var(--surface2);color:var(--text)">
+              <input id="sop-q1" type="text" placeholder="مثال: وصفات رمضانية وعروض خاصة" style="width:100%;padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:12px;outline:none;direction:rtl;background:var(--surface2);color:var(--text)">
             </div>
             <div>
               <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">2. موضوع الجمهور محتاجه ولسه ما اتعملش؟</div>
-              <input type="text" placeholder="مثال: كيف تختار الحلويات لمناسباتك" style="width:100%;padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:12px;outline:none;direction:rtl;background:var(--surface2);color:var(--text)">
+              <input id="sop-q2" type="text" placeholder="مثال: كيف تختار الحلويات لمناسباتك" style="width:100%;padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:12px;outline:none;direction:rtl;background:var(--surface2);color:var(--text)">
             </div>
             <div>
               <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">3. مناسبات الشهر الجديد؟</div>
-              <input type="text" placeholder="مثال: عيد العمال، بداية الصيف" style="width:100%;padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:12px;outline:none;direction:rtl;background:var(--surface2);color:var(--text)">
+              <input id="sop-q3" type="text" placeholder="مثال: عيد العمال، بداية الصيف" style="width:100%;padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:12px;outline:none;direction:rtl;background:var(--surface2);color:var(--text)">
             </div>
             <div>
               <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">4. الـ CTA الرئيسي للشهر؟</div>
@@ -925,7 +925,7 @@
               </div>
             </div>
           </div>
-          <button class="btn btn-primary" style="width:100%" onclick="activateStep(3)">✅ تأكيد وانتقل للخطة الشهرية</button>
+          <button class="btn btn-primary" style="width:100%" onclick="confirmSOPStep2()">✅ تأكيد وانتقل للخطة الشهرية</button>
         </div>
 
         <!-- STEP 1 PANEL -->
@@ -943,26 +943,20 @@
 
         <!-- STEP 3 PANEL -->
         <div id="step-panel-3" class="card hidden">
-          <div class="card-title">📅 Content Calendar — أبريل 2026</div>
-          <div id="calendar-content">
-            <div class="calendar-week">
-              <div class="week-label">الأسبوع الأول</div>
-              <div class="content-items">
-                <div class="content-item"><div class="content-type-dot dot-post"></div><div class="content-title">بوست JTBD: ليه الناس بتحب حلويات خيرات؟</div><div class="content-platform">FB + IG</div></div>
-                <div class="content-item"><div class="content-type-dot dot-reel"></div><div class="content-title">ريل: طريقة عمل الكنافة بالجبن في 60 ثانية</div><div class="content-platform">IG + TK</div></div>
-                <div class="content-item"><div class="content-type-dot dot-post"></div><div class="content-title">بوست NLP: اللحظة اللي بتشتري فيها حاجة حلوة</div><div class="content-platform">FB + IG</div></div>
-              </div>
-            </div>
-            <div class="calendar-week">
-              <div class="week-label">الأسبوع الثاني</div>
-              <div class="content-items">
-                <div class="content-item"><div class="content-type-dot dot-reel"></div><div class="content-title">ريل: 3 وصفات حلوة في أقل من 3 دقايق</div><div class="content-platform">IG + TK</div></div>
-                <div class="content-item"><div class="content-type-dot dot-post"></div><div class="content-title">بوست قصة: قصة عميل مبسوط من الطلب</div><div class="content-platform">FB + IG</div></div>
-                <div class="content-item"><div class="content-type-dot dot-post"></div><div class="content-title">بوست PAS: مشكلة إيجاد حلويات لمناسباتك</div><div class="content-platform">FB</div></div>
+          <div class="card-title">📅 الخطة الشهرية</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:12px;">بناءً على إجاباتك في الخطوة السابقة — Claude هيولّد الخطة الكاملة</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
+            <div>
+              <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">عدد البوستات</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <span class="tag tag-blue" id="sop-posts-8" style="cursor:pointer;padding:4px 10px;font-size:12px" onclick="selectSOPPostCount(this,8)">8 بوستات</span>
+                <span class="tag" id="sop-posts-12" style="cursor:pointer;padding:4px 10px;font-size:12px;background:var(--surface2);color:var(--text2)" onclick="selectSOPPostCount(this,12)">12 بوست</span>
+                <span class="tag" id="sop-posts-16" style="cursor:pointer;padding:4px 10px;font-size:12px;background:var(--surface2);color:var(--text2)" onclick="selectSOPPostCount(this,16)">16 بوست</span>
+                <span class="tag" id="sop-posts-20" style="cursor:pointer;padding:4px 10px;font-size:12px;background:var(--surface2);color:var(--text2)" onclick="selectSOPPostCount(this,20)">20 بوست</span>
               </div>
             </div>
           </div>
-          <button class="btn btn-primary" style="width:100%;margin-top:10px" onclick="activateStep(4)">ابدأ الكتابة →</button>
+          <button class="btn btn-primary" style="width:100%" onclick="goToMonthlyFromSOP()">✨ ولّد الخطة الشهرية كاملة</button>
         </div>
 
         <!-- STEP 4 PANEL (AI Writer) -->
@@ -1271,6 +1265,35 @@ let currentDialect = 'gulf';
 let monthlyPostCount = 8;
 let monthlyDialect = 'خليجي';
 let monthlyFW = 'JTBD';
+let sopPostCount = 8;
+
+function selectSOPPostCount(el, count) {
+  sopPostCount = count;
+  ['sop-posts-8','sop-posts-12','sop-posts-16','sop-posts-20'].forEach(id => {
+    const t = document.getElementById(id);
+    if(t) { t.className = 'tag'; t.style.cssText = 'cursor:pointer;padding:4px 10px;font-size:12px;background:var(--surface2);color:var(--text2)'; }
+  });
+  el.className = 'tag tag-blue';
+  el.style.cssText = 'cursor:pointer;padding:4px 10px;font-size:12px';
+}
+
+function confirmSOPStep2() { activateStep(3); }
+
+function goToMonthlyFromSOP() {
+  const q1 = document.getElementById('sop-q1') ? document.getElementById('sop-q1').value : '';
+  const q2 = document.getElementById('sop-q2') ? document.getElementById('sop-q2').value : '';
+  const q3 = document.getElementById('sop-q3') ? document.getElementById('sop-q3').value : '';
+  const month = document.getElementById('monthly-month');
+  if(month) month.value = new Date().toLocaleDateString('ar', {month:'long', year:'numeric'});
+  const occ = document.getElementById('monthly-occasions');
+  if(occ) occ.value = [q1 ? 'الشهر الماضي: ' + q1 : '', q3 ? 'مناسبات: ' + q3 : ''].filter(Boolean).join(' | ');
+  const goal = document.getElementById('monthly-goal');
+  if(goal) goal.value = q2 || '';
+  monthlyPostCount = sopPostCount;
+  monthlyFW = currentFW;
+  showScreen('monthly');
+  setTimeout(() => generateMonthlyContent(), 300);
+}
 
 function selectDialect(el, dialect) {
   currentDialect = dialect;
