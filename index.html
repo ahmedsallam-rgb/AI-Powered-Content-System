@@ -1304,11 +1304,20 @@ function removeTyping() {
 async function callAgent(request) {
   const res = await fetch(N8N_WEBHOOK, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
     body: JSON.stringify({ request })
   });
-  const data = await res.json();
-  return data.output || 'لم يصل رد من الوكيل، حاول تاني.';
+  if(!res.ok) throw new Error('الوكيل رد بخطأ: ' + res.status);
+  const text = await res.text();
+  try {
+    const data = JSON.parse(text);
+    return data.output || data.message || text;
+  } catch {
+    return text;
+  }
 }
 
 async function generateContent() {
