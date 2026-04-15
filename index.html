@@ -1363,9 +1363,7 @@ ${goal ? 'هدف الشهر: ' + goal : ''}
 لا تكتب أي شيء قبل الجدول أو بعده. فقط الجدول.`;
 
   try {
-    const response = await callAgent(request);
-    
-    // تحليل الجدول وعرضه
+    const response = await callAgent(request, { project: project, month: month });
     const lines = response.split('\n').filter(l => l.trim() && !l.includes('---'));
     const headers = lines[0] ? lines[0].split('|').map(h => h.trim()).filter(Boolean) : ['موعد النشر','فكرة التصميم','نص التصميم','الكابشن','الهاشتاجات','دعوة للتصرف'];
     const rows = lines.slice(1).map(l => l.split('|').map(c => c.trim()).filter(Boolean)).filter(r => r.length > 2);
@@ -1527,14 +1525,14 @@ function removeTyping() {
   if(t) t.remove();
 }
 
-async function callAgent(request) {
+async function callAgent(request, extraData = {}) {
   const res = await fetch(N8N_WEBHOOK, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json'
     },
-    body: JSON.stringify({ request })
+    body: JSON.stringify({ request, ...extraData })
   });
   if(!res.ok) throw new Error('الوكيل رد بخطأ: ' + res.status);
   const text = await res.text();
