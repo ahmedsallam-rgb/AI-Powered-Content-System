@@ -1830,14 +1830,14 @@ function handleContentFile(input) {
   };
   reader.readAsDataURL(file);
 }
+function handleCSV(input) {
   if(input.files.length > 0) {
     const fileName = input.files[0].name;
     activateStep(2);
-    // إظهار رسالة نجاح في بداية خطوة 2
     const panel = document.getElementById('step-panel-2');
     const msg = document.createElement('div');
     msg.style.cssText = 'background:var(--green-light);color:var(--green);padding:8px 12px;border-radius:6px;font-size:12px;margin-bottom:10px;';
-    msg.innerHTML = '✅ تم رفع الملف: ' + fileName + ' — أجب على الأسئلة دلوقتي';
+    msg.innerHTML = '✅ تم رفع التقرير: ' + fileName;
     panel.insertBefore(msg, panel.firstChild);
     setTimeout(() => msg.remove(), 5000);
   }
