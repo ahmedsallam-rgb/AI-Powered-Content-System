@@ -1406,6 +1406,21 @@ function goToMonthlyFromSOP() {
   const q1 = document.getElementById('sop-q1') ? document.getElementById('sop-q1').value : '';
   const q2 = document.getElementById('sop-q2') ? document.getElementById('sop-q2').value : '';
   const q3 = document.getElementById('sop-q3') ? document.getElementById('sop-q3').value : '';
+
+  // جيب اسم المشروع الحالي من الـ SOP
+  const currentProjectName = document.getElementById('sop-project-name').textContent;
+
+  // حدّث قائمة المشروع في شاشة المحتوى الشهري
+  const sel = document.getElementById('monthly-project');
+  if(sel) {
+    for(let i = 0; i < sel.options.length; i++) {
+      if(sel.options[i].value === currentProjectName) {
+        sel.selectedIndex = i;
+        break;
+      }
+    }
+  }
+
   const month = document.getElementById('monthly-month');
   if(month) month.value = new Date().toLocaleDateString('ar', {month:'long', year:'numeric'});
   const occ = document.getElementById('monthly-occasions');
