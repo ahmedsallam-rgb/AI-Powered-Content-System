@@ -1459,25 +1459,47 @@ function selectMonthlyFW(el, fw) {
 }
 
 async function generateMonthlyContent() {
-  const project = document.getElementById('monthly-project').value;
+  const projectName = document.getElementById('monthly-project').value;
   const month = document.getElementById('monthly-month').value || 'الشهر القادم';
   const occasions = document.getElementById('monthly-occasions').value;
   const goal = document.getElementById('monthly-goal').value;
   const output = document.getElementById('monthly-output');
 
+  // جيب بيانات المشروع الكاملة
+  const projectData = getProjects().find(p => p.name === projectName) || {};
+
   output.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text3)"><div class="typing"><span></span><span></span><span></span></div><div style="margin-top:8px;font-size:12px">جاري توليد الخطة الشهرية...</div></div>';
 
   const request = `أنت خبير تخطيط محتوى سوشيال ميديا.
 
-اعمل خطة محتوى شهرية كاملة للمشروع: ${project}
+اعمل خطة محتوى شهرية كاملة بناءً على المعلومات التالية:
+
+=== بيانات المشروع ===
+الاسم: ${projectName}
+نوع النشاط: ${projectData.type || ''}
+المنتج أو الخدمة: ${projectData.product || ''}
+نقاط التميز (USPs): ${projectData.usp || ''}
+الجمهور المستهدف: ${projectData.audience || ''}
+ألم الجمهور: ${projectData.pain || ''}
+أسلوب الكتابة: ${projectData.voice || ''}
+اللهجة: ${projectData.dialect || monthlyDialect}
+البلاتفورمات: ${(projectData.platforms || []).join(', ')}
+
+=== تفاصيل الخطة ===
 الشهر: ${month}
 عدد البوستات: ${monthlyPostCount} بوست
-اللهجة: ${monthlyDialect}
 إطار العمل: ${monthlyFW}
-${occasions ? 'مناسبات الشهر: ' + occasions : ''}
+${occasions ? 'مناسبات وأحداث الشهر: ' + occasions : ''}
 ${goal ? 'هدف الشهر: ' + goal : ''}
 
-مهم جداً — أعطني النتيجة بهذا الشكل الدقيق فقط، كل بوست في سطر منفصل، الأعمدة مفصولة بـ | :
+=== التعليمات ===
+اتبع خطوات SOP الشهري:
+- وزّع البوستات على أسابيع الشهر
+- نوّع بين بوستات تعليمية وقصص وترويج وتفاعل
+- كل بوست يعكس هوية البراند وأسلوبه المحدد
+- استخدم ألم الجمهور ونقاط التميز في الكتابة
+
+أعطني النتيجة في جدول بهذا الشكل الدقيق، كل بوست في سطر، الأعمدة مفصولة بـ | :
 
 موعد النشر | فكرة التصميم | نص التصميم | الكابشن | الهاشتاجات | دعوة للتصرف
 --- | --- | --- | --- | --- | ---
@@ -1486,7 +1508,42 @@ ${goal ? 'هدف الشهر: ' + goal : ''}
 لا تكتب أي شيء قبل الجدول أو بعده. فقط الجدول.`;
 
   try {
-    const response = await callAgent(request, { project: project, month: month });
+    const response = await callAgent(request, { project: projectName, month: month });
+    
+    // تحليل الجدول وعرضه
+    const lines = response.split('\n').filter(l => l.trim() && !l.includes('---'));
+    const headers = lines[0] ? lines[0].split('|').map(h => h.trim()).filter(Boolean) : ['موعد النشر','فكرة التصميم','نص التصميم','الكابشن','الهاشتاجات','دعوة للتصرف'];
+    const rows = lines.slice(1).map(l => l.split('|').map(c => c.trim()).filter(Boolean)).filter(r => r.length > 2);
+
+    window.monthlyTableData = { headers, rows, project: projectName, month };
+
+    let tableHTML = `
+      <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${projectName} — ${month} (${rows.length} بوست)</div>
+        <button onclick="downloadExcel()" class="btn btn-sm" style="background:var(--green);color:white;border-color:transparent">⬇️ تحميل Excel</button>
+      </div>
+      <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;direction:rtl;">
+        <thead>
+          <tr style="background:var(--surface2);">
+            ${headers.map(h => `<th style="padding:8px 10px;text-align:right;border:0.5px solid var(--border2);font-weight:600;white-space:nowrap;color:var(--text)">${h}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map((row, i) => `
+            <tr style="background:${i%2===0?'var(--surface)':'var(--surface2)'}">
+              ${row.map(cell => `<td style="padding:8px 10px;text-align:right;border:0.5px solid var(--border2);color:var(--text);line-height:1.5;min-width:120px">${cell}</td>`).join('')}
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      </div>`;
+
+    output.innerHTML = tableHTML;
+  } catch(e) {
+    output.innerHTML = '<div style="color:var(--coral);padding:1rem">حدث خطأ، حاول تاني.</div>';
+  }
+}
     const lines = response.split('\n').filter(l => l.trim() && !l.includes('---'));
     const headers = lines[0] ? lines[0].split('|').map(h => h.trim()).filter(Boolean) : ['موعد النشر','فكرة التصميم','نص التصميم','الكابشن','الهاشتاجات','دعوة للتصرف'];
     const rows = lines.slice(1).map(l => l.split('|').map(c => c.trim()).filter(Boolean)).filter(r => r.length > 2);
@@ -1676,8 +1733,22 @@ async function generateContent() {
 
   const dialectLabel = currentDialect === 'gulf' ? 'خليجي عربي راقي' : 'American English — casual and natural, not generic';
 
-  const request = `اكتب ${typeLabels[currentType]} لمشروع "${projectName}" باستخدام أسلوب "${currentFW}" باللهجة: ${dialectLabel}.
-${idea ? 'فكرة المحتوى: ' + idea : 'اختر فكرة مناسبة للمشروع.'}
+  // جيب بيانات المشروع الكاملة
+  const projectObj = getProjects().find(p => p.name === projectName) || {};
+
+  const request = `اكتب ${typeLabels[currentType]} لمشروع "${projectName}".
+
+=== بيانات البراند ===
+نوع النشاط: ${projectObj.type || ''}
+المنتج: ${projectObj.product || ''}
+نقاط التميز: ${projectObj.usp || ''}
+الجمهور: ${projectObj.audience || ''}
+ألم الجمهور: ${projectObj.pain || ''}
+أسلوب الكتابة: ${projectObj.voice || ''}
+اللهجة: ${dialectLabel}
+إطار العمل: ${currentFW}
+
+${idea ? 'فكرة المحتوى: ' + idea : 'اختر فكرة مناسبة للبراند.'}
 ${currentType === 'reel' ? 'سكريبت ريل 30-45 ثانية مع هوك قوي في أول 3 ثواني.' : ''}
 ${currentType === 'post' ? 'بوست جذاب مع هوك ومحتوى ودعوة للتصرف 150-250 كلمة.' : ''}
 ${currentType === 'story' ? 'نص ستوري تفاعلي قصير مع سؤال أو استطلاع.' : ''}
