@@ -1544,41 +1544,6 @@ ${goal ? 'هدف الشهر: ' + goal : ''}
     output.innerHTML = '<div style="color:var(--coral);padding:1rem">حدث خطأ، حاول تاني.</div>';
   }
 }
-    const lines = response.split('\n').filter(l => l.trim() && !l.includes('---'));
-    const headers = lines[0] ? lines[0].split('|').map(h => h.trim()).filter(Boolean) : ['موعد النشر','فكرة التصميم','نص التصميم','الكابشن','الهاشتاجات','دعوة للتصرف'];
-    const rows = lines.slice(1).map(l => l.split('|').map(c => c.trim()).filter(Boolean)).filter(r => r.length > 2);
-
-    // حفظ البيانات للتحميل
-    window.monthlyTableData = { headers, rows, project, month };
-
-    // بناء الجدول
-    let tableHTML = `
-      <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-        <div style="font-size:13px;font-weight:600;color:var(--text)">${project} — ${month} (${rows.length} بوست)</div>
-        <button onclick="downloadExcel()" class="btn btn-sm" style="background:var(--green);color:white;border-color:transparent">⬇️ تحميل Excel</button>
-      </div>
-      <div style="overflow-x:auto;">
-      <table style="width:100%;border-collapse:collapse;font-size:12px;direction:rtl;">
-        <thead>
-          <tr style="background:var(--surface2);">
-            ${headers.map(h => `<th style="padding:8px 10px;text-align:right;border:0.5px solid var(--border2);font-weight:600;white-space:nowrap;color:var(--text)">${h}</th>`).join('')}
-          </tr>
-        </thead>
-        <tbody>
-          ${rows.map((row, i) => `
-            <tr style="background:${i%2===0?'var(--surface)':'var(--surface2)'}">
-              ${row.map(cell => `<td style="padding:8px 10px;text-align:right;border:0.5px solid var(--border2);color:var(--text);line-height:1.5;min-width:120px">${cell}</td>`).join('')}
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-      </div>`;
-
-    output.innerHTML = tableHTML;
-  } catch(e) {
-    output.innerHTML = '<div style="color:var(--coral);padding:1rem">حدث خطأ، حاول تاني.</div>';
-  }
-}
 
 function downloadExcel() {
   const data = window.monthlyTableData;
