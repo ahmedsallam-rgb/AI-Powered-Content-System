@@ -951,13 +951,30 @@
 
         <!-- STEP 1 PANEL -->
         <div id="step-panel-1" class="card hidden">
-          <div class="card-title">📊 رفع بيانات الشهر السابق</div>
+          <div class="card-title">📊 مراجعة الشهر السابق</div>
+
+          <div style="font-size:12px;color:var(--text2);margin-bottom:10px;">الخطوة ١ — ارفع جدول المحتوى الشهر اللي فات عشان الوكيل يقيّمه</div>
+
+          <div class="upload-zone" onclick="document.getElementById('contentFile').click()" style="margin-bottom:10px;">
+            <input type="file" id="contentFile" style="display:none" accept=".xlsx,.csv" onchange="handleContentFile(this)">
+            <div class="upload-icon">📋</div>
+            <div class="upload-text">ارفع جدول المحتوى الشهر السابق</div>
+            <div class="upload-sub">نفس الفورمات — موعد النشر، فكرة التصميم، الكابشن...</div>
+          </div>
+
+          <div id="content-file-status" style="display:none;background:var(--green-light);color:var(--green);padding:8px 12px;border-radius:6px;font-size:12px;margin-bottom:10px;"></div>
+
+          <div style="border-top:0.5px solid var(--border);margin:10px 0;"></div>
+
+          <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">الخطوة ٢ — ارفع تقرير الأداء من Meta (اختياري)</div>
+
           <div class="upload-zone" onclick="document.getElementById('csvInput').click()">
             <input type="file" id="csvInput" style="display:none" accept=".csv,.xlsx" onchange="handleCSV(this)">
             <div class="upload-icon">📂</div>
-            <div class="upload-text">ارفع ملف CSV من Meta أو TikTok</div>
-            <div class="upload-sub">Facebook Insights + Instagram Insights + TikTok Analytics</div>
+            <div class="upload-text">ارفع CSV من Meta أو TikTok</div>
+            <div class="upload-sub">Facebook Insights + Instagram Insights</div>
           </div>
+
           <div style="text-align:center;margin:10px 0;font-size:12px;color:var(--text3)">أو</div>
           <button class="btn" style="width:100%;justify-content:center" onclick="activateStep(2)">ابدأ من غير بيانات →</button>
         </div>
@@ -1407,10 +1424,8 @@ function goToMonthlyFromSOP() {
   const q2 = document.getElementById('sop-q2') ? document.getElementById('sop-q2').value : '';
   const q3 = document.getElementById('sop-q3') ? document.getElementById('sop-q3').value : '';
 
-  // جيب اسم المشروع الحالي من الـ SOP
   const currentProjectName = document.getElementById('sop-project-name').textContent;
 
-  // حدّث قائمة المشروع في شاشة المحتوى الشهري
   const sel = document.getElementById('monthly-project');
   if(sel) {
     for(let i = 0; i < sel.options.length; i++) {
@@ -1423,8 +1438,12 @@ function goToMonthlyFromSOP() {
 
   const month = document.getElementById('monthly-month');
   if(month) month.value = new Date().toLocaleDateString('ar', {month:'long', year:'numeric'});
+
+  // دمج بيانات الشهر السابق في الأسئلة
+  const prevNote = previousContentData ? `\nالمحتوى السابق: تم رفع ملف "${previousContentData.fileName}" — الوكيل سيحلله ويطور بناءً عليه` : '';
+
   const occ = document.getElementById('monthly-occasions');
-  if(occ) occ.value = [q1 ? 'الشهر الماضي: ' + q1 : '', q3 ? 'مناسبات: ' + q3 : ''].filter(Boolean).join(' | ');
+  if(occ) occ.value = [q1 ? 'الشهر الماضي: ' + q1 : '', q3 ? 'مناسبات: ' + q3 : '', prevNote].filter(Boolean).join(' | ');
   const goal = document.getElementById('monthly-goal');
   if(goal) goal.value = q2 || '';
   monthlyPostCount = sopPostCount;
@@ -1514,6 +1533,7 @@ ${goal ? 'هدف الشهر: ' + goal : ''}
 - نوّع بين بوستات تعليمية وقصص وترويج وتفاعل
 - كل بوست يعكس هوية البراند وأسلوبه المحدد
 - استخدم ألم الجمهور ونقاط التميز في الكتابة
+${previousContentData ? `- تم رفع محتوى الشهر السابق "${previousContentData.fileName}" — قيّم ما نجح وطوّره، وتجنب ما لم ينجح` : ''}
 
 أعطني النتيجة في جدول بهذا الشكل الدقيق، كل بوست في سطر، الأعمدة مفصولة بـ | :
 
@@ -1781,7 +1801,35 @@ async function sendMessage() {
   isLoading = false;
 }
 
-function handleCSV(input) {
+let previousContentData = null;
+
+function handleContentFile(input) {
+  if(!input.files.length) return;
+  const file = input.files[0];
+  const status = document.getElementById('content-file-status');
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      // قراءة الملف بـ SheetJS في المتصفح
+      status.style.display = 'block';
+      status.textContent = '✅ تم رفع الملف: ' + file.name + ' — سيتم تحليله عند توليد الخطة';
+      previousContentData = { fileName: file.name, fileData: e.target.result };
+
+      // تعليم الخطوة الأولى كمكتملة
+      const circle = document.getElementById('circle-1');
+      if(circle) { circle.className = 'step-circle step-done'; circle.textContent = '✓'; }
+
+      setTimeout(() => activateStep(2), 1500);
+    } catch(err) {
+      status.style.display = 'block';
+      status.style.background = 'var(--coral-light)';
+      status.style.color = 'var(--coral)';
+      status.textContent = '⚠️ خطأ في قراءة الملف';
+    }
+  };
+  reader.readAsDataURL(file);
+}
   if(input.files.length > 0) {
     const fileName = input.files[0].name;
     activateStep(2);
