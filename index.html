@@ -839,7 +839,7 @@
 
             <div class="sop-step" onclick="activateStep(1)">
               <div class="step-indicator">
-                <div class="step-circle step-done" id="circle-1">✓</div>
+                <div class="step-circle step-todo" id="circle-1">1</div>
                 <div class="step-line"></div>
               </div>
               <div class="step-content">
@@ -1503,7 +1503,8 @@ async function generateMonthlyContent() {
 === تفاصيل الخطة ===
 الشهر: ${month}
 عدد البوستات: ${monthlyPostCount} بوست
-إطار العمل: ${monthlyFW}
+إطار العمل: ${monthlyFW} — ${monthlyFW==='JTBD'?'ركز على الوظيفة الحقيقية للعميل وليس المنتج':monthlyFW==='PAS'?'مشكلة ثم إثارة ثم حل':monthlyFW==='NLP'?'ألم ثم أمل ثم هوية':'رحلة البطل من المشكلة للحل'}
+دعوة للتصرف الرئيسية: ${selectedCTA || 'تواصل معنا'}
 ${occasions ? 'مناسبات وأحداث الشهر: ' + occasions : ''}
 ${goal ? 'هدف الشهر: ' + goal : ''}
 
@@ -1633,9 +1634,12 @@ function selectFWWriter(el, fw) {
 function selectCTA(el) {
   const parent = el.parentElement;
   parent.querySelectorAll('.tag').forEach(t => {
-    t.className = 'tag tag-blue';
-    t.style.cssText = 'cursor:pointer;padding:4px 10px;font-size:12px';
+    t.style.cssText = 'cursor:pointer;padding:4px 10px;font-size:12px;background:var(--surface2);color:var(--text2)';
+    t.className = 'tag';
   });
+  el.className = 'tag tag-blue';
+  el.style.cssText = 'cursor:pointer;padding:4px 10px;font-size:12px';
+  selectedCTA = el.textContent.trim();
 }
 
 function setType(type) {
