@@ -812,6 +812,30 @@
             <input id="np-emoji" type="text" placeholder="🌙" maxlength="2" style="width:80px;padding:8px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:20px;outline:none;background:var(--surface2);color:var(--text);text-align:center">
           </div>
 
+          <div style="border-top:0.5px solid var(--border);padding-top:12px;">
+            <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--text)">📎 ملفات المشروع</div>
+
+            <div style="margin-bottom:10px;">
+              <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">الاستراتيجية التسويقية — PDF أو Word</div>
+              <div class="upload-zone" onclick="document.getElementById('np-strategy').click()" style="padding:1rem;">
+                <input type="file" id="np-strategy" style="display:none" accept=".pdf,.doc,.docx" onchange="handleStrategyFile(this)">
+                <div style="font-size:20px;margin-bottom:4px">📄</div>
+                <div style="font-size:12px;color:var(--text2)">ارفع ملف الاستراتيجية</div>
+                <div id="np-strategy-name" style="font-size:11px;color:var(--green);margin-top:4px;"></div>
+              </div>
+            </div>
+
+            <div>
+              <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">خطط المحتوى القديمة — Excel</div>
+              <div class="upload-zone" onclick="document.getElementById('np-old-content').click()" style="padding:1rem;">
+                <input type="file" id="np-old-content" style="display:none" accept=".xlsx,.csv" onchange="handleOldContentFile(this)">
+                <div style="font-size:20px;margin-bottom:4px">📊</div>
+                <div style="font-size:12px;color:var(--text2)">ارفع خطط المحتوى القديمة</div>
+                <div id="np-old-content-name" style="font-size:11px;color:var(--green);margin-top:4px;"></div>
+              </div>
+            </div>
+          </div>
+
           <button class="btn btn-primary" style="width:100%;padding:12px;font-size:14px" onclick="saveNewProject()">✅ حفظ المشروع</button>
         </div>
       </div>
@@ -1306,7 +1330,7 @@ let monthlyDialect = 'خليجي';
 let monthlyFW = 'JTBD';
 // Supabase Configuration
 const SUPABASE_URL = 'https://kjwykytjuxfytmkuenob.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_qFJ5nIPYMJjJE7c288h2AA_ixPoK9mv';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtqd3lreXRqdXhmeXRta3Vlbm9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNzE3MDgsImV4cCI6MjA5MTc0NzcwOH0.us4Yw3ZR5O___4zjiClMjOYZ8tE8PV5kmfE1TysqW6I';
 
 async function supabaseQuery(table, method = 'GET', body = null, filter = '') {
   const url = `${SUPABASE_URL}/rest/v1/${table}${filter}`;
@@ -1389,9 +1413,15 @@ async function saveProjectToSupabase(project) {
 async function deleteProjectFromSupabase(id) {
   try {
     await supabaseQuery('projects', 'DELETE', null, `?id=eq.${id}`);
-    await loadProjectsFromSupabase();
+    const projects = getProjects().filter(p => p.id !== id);
+    saveProjects(projects);
+    renderProjects();
   } catch(e) {
     console.log('Supabase delete error:', e);
+    // حذف محلي فقط لو فشل
+    const projects = getProjects().filter(p => p.id !== id);
+    saveProjects(projects);
+    renderProjects();
   }
 }
 
@@ -1435,13 +1465,12 @@ function updateProjectSelects(projects) {
 
 function deleteProject(id) {
   if(!confirm('هل أنت متأكد من حذف المشروع؟')) return;
-  // حذف من Supabase لو الـ id مش local
-  if(!id.startsWith('p_')) {
-    deleteProjectFromSupabase(id);
-  } else {
+  if(id.startsWith('p_')) {
     const projects = getProjects().filter(p => p.id !== id);
     saveProjects(projects);
     renderProjects();
+  } else {
+    deleteProjectFromSupabase(id);
   }
 }
 
@@ -1456,6 +1485,27 @@ function openProjectById(id) {
 
 function openNewProject() {
   document.getElementById('new-project-modal').style.display = 'flex';
+}
+
+let newProjectStrategy = null;
+let newProjectOldContent = null;
+
+function handleStrategyFile(input) {
+  if(!input.files.length) return;
+  const file = input.files[0];
+  document.getElementById('np-strategy-name').textContent = '✓ ' + file.name;
+  const reader = new FileReader();
+  reader.onload = e => { newProjectStrategy = { name: file.name, data: e.target.result }; };
+  reader.readAsDataURL(file);
+}
+
+function handleOldContentFile(input) {
+  if(!input.files.length) return;
+  const file = input.files[0];
+  document.getElementById('np-old-content-name').textContent = '✓ ' + file.name;
+  const reader = new FileReader();
+  reader.onload = e => { newProjectOldContent = { name: file.name, data: e.target.result }; };
+  reader.readAsDataURL(file);
 }
 
 function closeNewProject() {
@@ -1479,6 +1529,8 @@ function saveNewProject() {
     pain: document.getElementById('np-pain').value,
     voice: document.getElementById('np-voice').value,
     product: document.getElementById('np-product').value,
+    strategy: newProjectStrategy ? newProjectStrategy.name : null,
+    oldContent: newProjectOldContent ? newProjectOldContent.name : null,
     status: 'active'
   };
   const projects = getProjects();
@@ -1487,6 +1539,8 @@ function saveNewProject() {
   renderProjects();
   closeNewProject();
   saveProjectToSupabase(newProject);
+  newProjectStrategy = null;
+  newProjectOldContent = null;
   ['np-name','np-type','np-product','np-usp','np-audience','np-pain','np-voice','np-emoji'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
 }
 
