@@ -1245,6 +1245,22 @@
               <div>اضبط الإعدادات واضغط ولّد الخطة</div>
             </div>
           </div>
+
+          <!-- خانة التعديل التفاعلي -->
+          <div id="monthly-chat-area" style="display:none;border-top:0.5px solid var(--border);margin-top:12px;padding-top:12px;">
+            <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">💬 اطلب أي تعديل على الخطة</div>
+            <div id="monthly-chat-messages" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;max-height:200px;overflow-y:auto;"></div>
+            <div style="display:flex;gap:8px;">
+              <input id="monthly-chat-input" type="text" placeholder="مثال: عدّل البوست الثالث عشان يكون أكثر عاطفي..." style="flex:1;padding:8px 12px;border:0.5px solid var(--border2);border-radius:20px;font-family:'Cairo',sans-serif;font-size:13px;outline:none;background:var(--surface2);color:var(--text);direction:rtl" onkeydown="if(event.key==='Enter')sendMonthlyChat()">
+              <button onclick="sendMonthlyChat()" class="btn-send">↑</button>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
+              <span onclick="quickEdit('ضيف بوست عن أحدث منتج')" style="font-size:11px;padding:3px 10px;background:var(--surface2);border-radius:20px;cursor:pointer;color:var(--text2)">+ ضيف بوست</span>
+              <span onclick="quickEdit('اجعل الكابشنات أقصر وأكثر جاذبية')" style="font-size:11px;padding:3px 10px;background:var(--surface2);border-radius:20px;cursor:pointer;color:var(--text2)">قصّر الكابشنات</span>
+              <span onclick="quickEdit('أضف ريلز بدل بعض البوستات الستاتيك')" style="font-size:11px;padding:3px 10px;background:var(--surface2);border-radius:20px;cursor:pointer;color:var(--text2)">حوّل لريلز</span>
+              <span onclick="quickEdit('غيّر إطار العمل لـ NLP وأعد كتابة الكابشنات')" style="font-size:11px;padding:3px 10px;background:var(--surface2);border-radius:20px;cursor:pointer;color:var(--text2)">غيّر الإطار لـ NLP</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1717,6 +1733,15 @@ ${previousContentData ? `- تم رفع محتوى الشهر السابق "${pre
       </div>`;
 
     output.innerHTML = tableHTML;
+
+    // إظهار خانة التعديل التفاعلي
+    const chatArea = document.getElementById('monthly-chat-area');
+    if(chatArea) {
+      chatArea.style.display = 'block';
+      document.getElementById('monthly-chat-messages').innerHTML = '';
+      monthlyChatHistory = [];
+      addMonthlyChatMsg('ai', `تم توليد ${rows.length} بوست لـ ${projectName} — اطلب أي تعديل تحتاجه! 🎉`);
+    }
   } catch(e) {
     output.innerHTML = '<div style="color:var(--coral);padding:1rem">حدث خطأ، حاول تاني.</div>';
   }
@@ -1942,7 +1967,95 @@ async function sendMessage() {
   isLoading = false;
 }
 
-let previousContentData = null;
+let monthlyChatHistory = [];
+
+function quickEdit(text) {
+  document.getElementById('monthly-chat-input').value = text;
+  sendMonthlyChat();
+}
+
+function addMonthlyChatMsg(role, text) {
+  const area = document.getElementById('monthly-chat-messages');
+  const div = document.createElement('div');
+  div.style.cssText = `display:flex;gap:6px;${role==='user'?'flex-direction:row-reverse':''}`;
+  div.innerHTML = `
+    <div style="width:22px;height:22px;border-radius:50%;background:${role==='user'?'var(--amber-light)':'var(--blue)'};display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;color:${role==='user'?'var(--amber)':'white'}">${role==='user'?'👤':'🤖'}</div>
+    <div style="padding:6px 10px;border-radius:10px;font-size:12px;background:${role==='user'?'var(--blue)':'var(--surface2)'};color:${role==='user'?'white':'var(--text)'};max-width:85%;line-height:1.5;direction:rtl">${text.replace(/\n/g,'<br>')}</div>`;
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+async function sendMonthlyChat() {
+  const input = document.getElementById('monthly-chat-input');
+  const text = input.value.trim();
+  if(!text || isLoading) return;
+  input.value = '';
+
+  const projectName = document.getElementById('monthly-project').value;
+  const projectData = getProjects().find(p => p.name === projectName) || {};
+
+  // جيب الخطة الحالية من الجدول
+  const currentTable = window.monthlyTableData;
+  const currentPlan = currentTable ? currentTable.rows.map((r,i) =>
+    `${i+1}. ${r[0]||''} | ${r[2]||''} | ${r[3]||''}`
+  ).join('\n') : 'لا توجد خطة محددة';
+
+  addMonthlyChatMsg('user', text);
+  monthlyChatHistory.push({ role: 'user', content: text });
+
+  // أضف indicator
+  const loadDiv = document.createElement('div');
+  loadDiv.id = 'monthly-loading';
+  loadDiv.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+  loadDiv.style.cssText = 'padding:6px 10px;';
+  document.getElementById('monthly-chat-messages').appendChild(loadDiv);
+
+  isLoading = true;
+  try {
+    const request = `أنت مساعد تعديل محتوى سوشيال ميديا للمشروع: ${projectName}
+البراند: ${projectData.voice || ''} | اللهجة: ${projectData.dialect || ''}
+
+الخطة الحالية:
+${currentPlan}
+
+طلب التعديل: ${text}
+
+نفّذ التعديل المطلوب وأعطني:
+١. الخطة المعدّلة كاملة بنفس الجدول والتنسيق
+٢. ملاحظة قصيرة عن ما تغيّر
+
+الجدول بنفس الأعمدة: موعد النشر | فكرة التصميم | نص التصميم | الكابشن | الهاشتاجات | دعوة للتصرف`;
+
+    const response = await callAgent(request, { project: projectName, month: currentTable?.month || '' });
+
+    document.getElementById('monthly-loading')?.remove();
+    addMonthlyChatMsg('ai', response);
+    monthlyChatHistory.push({ role: 'assistant', content: response });
+
+    // تحديث الجدول لو في جدول جديد في الرد
+    const lines = response.split('\n').filter(l => l.trim() && !l.includes('---'));
+    const tableLines = lines.filter(l => l.includes('|') && l.split('|').length >= 4);
+    if(tableLines.length > 2) {
+      const rows = tableLines.slice(1).map(l => l.split('|').map(c=>c.trim()).filter(Boolean)).filter(r=>r.length>=4);
+      if(rows.length > 0 && currentTable) {
+        currentTable.rows = rows;
+        window.monthlyTableData = currentTable;
+        // تحديث الجدول في الشاشة
+        const headers = currentTable.headers;
+        document.getElementById('monthly-output').querySelector('tbody').innerHTML = rows.map((row,i) => `
+          <tr style="background:${i%2===0?'var(--surface)':'var(--surface2)'}">
+            ${row.map(cell=>`<td style="padding:8px 10px;text-align:right;border:0.5px solid var(--border2);color:var(--text);line-height:1.5;min-width:120px">${cell}</td>`).join('')}
+          </tr>`).join('');
+      }
+    }
+  } catch(e) {
+    document.getElementById('monthly-loading')?.remove();
+    addMonthlyChatMsg('ai', '⚠️ حدث خطأ، حاول تاني.');
+  }
+  isLoading = false;
+}
+
+let monthlyChatHistory_ref = [];
 
 function handleContentFile(input) {
   if(!input.files.length) return;
