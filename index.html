@@ -1366,14 +1366,7 @@ async function supabaseQuery(table, method = 'GET', body = null, filter = '') {
 }
 
 // Projects Management
-const DEFAULT_PROJECTS = [
-  { id: 'khairat', name: 'Khairat Laziza', type: 'فود & مطاعم', emoji: '🍰', bg: '#FEF0EB', platforms: ['FB','IG','TK'], dialect: 'مصري عامية', audience: '', usp: '', pain: '', voice: '', product: '', status: 'active' },
-  { id: 'realestate', name: 'العقارية', type: 'عقارات & استثمار', emoji: '🏠', bg: '#E8F0FE', platforms: ['FB','IG'], dialect: 'فصحى مبسطة', audience: '', usp: '', pain: '', voice: '', product: '', status: 'active' },
-  { id: 'clinic', name: 'ميديكل كلينيك', type: 'صحة وجمال', emoji: '💊', bg: '#E3F5EF', platforms: ['IG','TK'], dialect: 'مصري عامية', audience: '', usp: '', pain: '', voice: '', product: '', status: 'active' },
-  { id: 'fashion', name: 'فاشون ستور', type: 'ملابس & فاشون', emoji: '👗', bg: '#EDE9FE', platforms: ['IG','TK'], dialect: 'مصري عامية', audience: '', usp: '', pain: '', voice: '', product: '', status: 'pending' },
-  { id: 'academy', name: 'أكاديمية التعليم', type: 'تعليم & تدريب', emoji: '🎓', bg: '#FAEEDA', platforms: ['FB','IG'], dialect: 'فصحى مبسطة', audience: '', usp: '', pain: '', voice: '', product: '', status: 'pending' },
-  { id: 'helal', name: 'الهلال للعطور', type: 'عطور وبخور فاخرة', emoji: '🌙', bg: '#E1F5EE', platforms: ['IG','SC','TK','YT','FB'], dialect: 'خليجي سعودي', audience: 'رجال ونساء سعوديون 25-45', usp: '', pain: '', voice: 'فاخر وراقي وأصيل', product: 'عطور وبخور فاخرة', status: 'active' },
-];
+const DEFAULT_PROJECTS = [];
 
 async function loadProjectsFromSupabase() {
   try {
