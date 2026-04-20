@@ -1398,11 +1398,18 @@ async function loadProjectsFromSupabase() {
         product: p.product || '',
         status: p.status || 'active'
       }));
-      saveProjects(mapped);
+      const local = getProjects();
+      const supabaseIds = mapped.map(p => String(p.id));
+      const localOnly = local.filter(p => !supabaseIds.includes(String(p.id)));
+      const merged = [...mapped, ...localOnly];
+      saveProjects(merged);
+      renderProjects();
+    } else {
       renderProjects();
     }
   } catch(e) {
     console.log('Supabase load error:', e);
+    renderProjects();
   }
 }
 
@@ -1746,6 +1753,9 @@ ${previousContentData ? `- تم رفع محتوى الشهر السابق "${pre
       monthlyChatHistory = [];
       addMonthlyChatMsg('ai', `تم توليد ${rows.length} بوست لـ ${projectName} — اطلب أي تعديل تحتاجه! 🎉`);
     }
+
+    // حفظ الخطة في الذاكرة
+    savePlanToMemory(projectName, month, rows, monthlyFW, monthlyDialect);
   } catch(e) {
     output.innerHTML = '<div style="color:var(--coral);padding:1rem">حدث خطأ، حاول تاني.</div>';
   }
@@ -1971,7 +1981,59 @@ async function sendMessage() {
   isLoading = false;
 }
 
-let monthlyChatHistory = [];
+// حفظ الخطة الشهرية في content_memory
+async function savePlanToMemory(projectName, month, rows, framework, dialect) {
+  try {
+    const projectData = await supabaseQuery('projects', 'GET', null, `?name=eq.${encodeURIComponent(projectName)}&select=id`);
+    if(!projectData || !projectData.length) return;
+    const projectId = projectData[0].id;
+
+    const planText = rows.map((r, i) =>
+      `${i+1}. ${r[0]||''} | ${r[2]||''} | ${r[3]||''}`
+    ).join('\n');
+
+    await supabaseQuery('content_memory', 'POST', {
+      project_id: projectId,
+      month: month,
+      content_type: 'monthly_plan',
+      title: `خطة ${month} — ${projectName}`,
+      body: planText,
+      plan_data: JSON.stringify(rows),
+      post_count: rows.length,
+      framework: framework,
+      dialect: dialect,
+      platform: 'all',
+      notes: `تم التوليد تلقائياً`
+    });
+    console.log('✅ تم حفظ الخطة في الذاكرة');
+  } catch(e) {
+    console.log('خطأ في حفظ الخطة:', e);
+  }
+}
+
+// حفظ التعديل في content_memory
+async function saveEditToMemory(projectName, month, editRequest, editResult) {
+  try {
+    const projectData = await supabaseQuery('projects', 'GET', null, `?name=eq.${encodeURIComponent(projectName)}&select=id`);
+    if(!projectData || !projectData.length) return;
+    const projectId = projectData[0].id;
+
+    await supabaseQuery('content_memory', 'POST', {
+      project_id: projectId,
+      month: month,
+      content_type: 'edit',
+      title: `تعديل: ${editRequest.substring(0, 60)}`,
+      body: editResult,
+      edit_request: editRequest,
+      edit_result: editResult,
+      platform: 'all',
+      notes: 'تعديل يدوي من الشات'
+    });
+    console.log('✅ تم حفظ التعديل في الذاكرة');
+  } catch(e) {
+    console.log('خطأ في حفظ التعديل:', e);
+  }
+}
 
 function quickEdit(text) {
   document.getElementById('monthly-chat-input').value = text;
@@ -2035,6 +2097,11 @@ ${currentPlan}
     document.getElementById('monthly-loading')?.remove();
     addMonthlyChatMsg('ai', response);
     monthlyChatHistory.push({ role: 'assistant', content: response });
+
+    // حفظ التعديل في الذاكرة
+    const projectName = document.getElementById('monthly-project').value;
+    const currentTable = window.monthlyTableData;
+    saveEditToMemory(projectName, currentTable?.month || '', text, response);
 
     // تحديث الجدول لو في جدول جديد في الرد
     const lines = response.split('\n').filter(l => l.trim() && !l.includes('---'));
