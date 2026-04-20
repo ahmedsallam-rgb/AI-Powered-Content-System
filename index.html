@@ -41,7 +41,6 @@
     font-size: 14px;
   }
 
-  /* شاشة تسجيل الدخول */
   .login-screen {
     position: fixed; inset: 0;
     background: var(--bg);
@@ -80,7 +79,6 @@
   .login-error { font-size: 12px; color: var(--coral); margin-top: 8px; display: none; }
   .login-divider { border: none; border-top: 0.5px solid var(--border); margin: 1.25rem 0; }
 
-  /* شريط مفتاح الذكاء الاصطناعي في الأسفل */
   .api-bar {
     position: fixed; bottom: 0; left: 0; right: 220px;
     background: var(--surface); border-top: 0.5px solid var(--border);
@@ -101,7 +99,6 @@
   .api-bar-label { font-size: 12px; color: var(--text2); }
   .api-save { padding: 5px 14px; background: var(--blue); color: white; border: none; border-radius: 20px; font-size: 12px; font-family: 'Cairo', sans-serif; cursor: pointer; }
 
-  /* LAYOUT */
   .app { display: flex; min-height: 100vh; }
 
   .sidebar {
@@ -156,16 +153,13 @@
 
   .nav-icon { font-size: 14px; width: 18px; text-align: center; }
 
-  /* SCREENS */
   .screen { display: none; }
   .screen.active { display: block; }
 
-  /* PAGE HEADER */
   .page-header { margin-bottom: 1.5rem; }
   .page-title { font-size: 20px; font-weight: 700; color: var(--text); }
   .page-sub { font-size: 13px; color: var(--text2); margin-top: 3px; }
 
-  /* CARDS */
   .card {
     background: var(--surface);
     border: 0.5px solid var(--border);
@@ -184,11 +178,9 @@
     gap: 6px;
   }
 
-  /* GRID */
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
   .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
 
-  /* PROJECTS GRID */
   .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
 
   .project-card {
@@ -240,7 +232,6 @@
   .status-active { background: #22c55e; }
   .status-pending { background: #f59e0b; }
 
-  /* SOP STEPPER */
   .sop-steps { display: flex; flex-direction: column; gap: 0; }
 
   .sop-step {
@@ -283,7 +274,6 @@
   .step-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
   .step-day { font-size: 10px; color: var(--text3); margin-top: 4px; }
 
-  /* CHAT */
   .chat-container {
     background: var(--surface);
     border: 0.5px solid var(--border);
@@ -337,6 +327,9 @@
     border-radius: 12px;
     font-size: 13px;
     line-height: 1.6;
+    direction: rtl;
+    text-align: right;
+    unicode-bidi: plaintext;
   }
 
   .msg.ai .msg-bubble { background: var(--surface2); color: var(--text); border-bottom-right-radius: 4px; }
@@ -393,7 +386,6 @@
   .btn-send:hover { opacity: 0.85; }
   .btn-send:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  /* BUTTONS */
   .btn {
     display: inline-flex;
     align-items: center;
@@ -415,7 +407,6 @@
   .btn-primary:hover { opacity: 0.9; background: var(--blue); }
   .btn-sm { padding: 5px 10px; font-size: 12px; }
 
-  /* STAT CARDS */
   .stat-card {
     background: var(--surface2);
     border-radius: var(--radius-sm);
@@ -426,10 +417,8 @@
   .stat-value { font-size: 22px; font-weight: 700; color: var(--text); }
   .stat-change { font-size: 11px; color: var(--green); margin-top: 2px; }
 
-  /* QUICK ACTIONS */
   .quick-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.5rem; }
 
-  /* UPLOAD ZONE */
   .upload-zone {
     border: 1.5px dashed var(--border2);
     border-radius: var(--radius);
@@ -445,7 +434,6 @@
   .upload-text { font-size: 13px; color: var(--text2); }
   .upload-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
 
-  /* FRAMEWORK SELECTOR */
   .framework-options { display: flex; gap: 8px; flex-wrap: wrap; }
 
   .fw-option {
@@ -463,7 +451,6 @@
   .fw-name { font-weight: 600; font-size: 12px; }
   .fw-desc { font-size: 10px; color: var(--text2); margin-top: 2px; }
 
-  /* CONTENT CALENDAR */
   .calendar-week { margin-bottom: 1rem; }
   .week-label { font-size: 11px; font-weight: 600; color: var(--text3); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
 
@@ -492,29 +479,15 @@
   .content-title { font-size: 13px; flex: 1; }
   .content-platform { font-size: 10px; color: var(--text3); }
 
-  /* RTL/LTR FIX — Arabic text always RTL, English inline stays readable */
-  .msg-bubble {
-    direction: rtl;
-    text-align: right;
-    unicode-bidi: plaintext;
-  }
-  .msg.user .msg-bubble {
-    direction: rtl;
-    text-align: right;
-    unicode-bidi: plaintext;
-  }
-  /* All inputs/textareas already have direction:rtl inline */
-  /* Labels and content titles */
   .content-title, .step-title, .step-desc, .project-name,
   .format-detail, .fw-desc, .stat-label, .page-sub,
   .card-title, .nav-item, .logo-sub {
     direction: rtl;
     unicode-bidi: plaintext;
   }
-  /* English words inside Arabic get isolated so they don't flip */
+
   bdi { unicode-bidi: isolate; }
 
-  /* TYPING */
   .typing { display: flex; gap: 3px; align-items: center; padding: 4px 0; }
   .typing span {
     width: 5px; height: 5px;
@@ -530,12 +503,10 @@
     30% { transform: translateY(-4px); }
   }
 
-  /* SCROLLBAR */
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
-  /* RESPONSIVE */
   @media (max-width: 700px) {
     .sidebar { display: none; }
     .main { margin-right: 0; padding: 1rem; }
@@ -562,7 +533,6 @@
 </head>
 <body>
 
-<!-- شاشة تسجيل الدخول -->
 <div class="login-screen" id="login-screen">
   <div class="login-box">
     <div class="login-logo">🌊</div>
@@ -579,7 +549,6 @@
   </div>
 </div>
 
-<!-- شريط مفتاح الذكاء الاصطناعي -->
 <div class="api-bar" id="api-bar" style="display:none">
   <div class="api-dot off" id="api-dot"></div>
   <span class="api-bar-label">مفتاح الذكاء الاصطناعي:</span>
@@ -590,7 +559,6 @@
 
 <div class="app">
 
-  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="logo">
       <div class="logo-name">🌊 Sahab Agency</div>
@@ -631,10 +599,8 @@
     </div>
   </aside>
 
-  <!-- MAIN -->
   <main class="main">
 
-    <!-- DASHBOARD -->
     <div id="screen-dashboard" class="screen active">
       <div class="page-header">
         <div class="page-title">مرحباً بك في Sahab 👋</div>
@@ -730,7 +696,6 @@
       </div>
     </div>
 
-    <!-- PROJECTS -->
     <div id="screen-projects" class="screen">
       <div class="page-header">
         <div class="page-title">المشاريع</div>
@@ -739,7 +704,6 @@
       <div class="projects-grid" id="projects-grid"></div>
     </div>
 
-    <!-- NEW PROJECT MODAL -->
     <div id="new-project-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:999;align-items:center;justify-content:center;">
       <div style="background:var(--surface);border-radius:var(--radius);padding:1.5rem;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;direction:rtl;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
@@ -747,7 +711,6 @@
           <button onclick="closeNewProject()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text2)">✕</button>
         </div>
         <div style="display:flex;flex-direction:column;gap:12px;">
-
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
             <div>
               <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">اسم المشروع *</div>
@@ -758,17 +721,14 @@
               <input id="np-type" type="text" placeholder="مثال: عطور وبخور فاخرة" style="width:100%;padding:8px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:13px;outline:none;background:var(--surface2);color:var(--text);direction:rtl">
             </div>
           </div>
-
           <div>
             <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">وصف المنتج أو الخدمة *</div>
             <textarea id="np-product" rows="2" placeholder="ما الذي تبيعه؟ ما المشكلة التي تحلها؟" style="width:100%;padding:8px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:13px;outline:none;direction:rtl;resize:vertical;background:var(--surface2);color:var(--text)"></textarea>
           </div>
-
           <div>
             <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">الـ USPs — نقاط التميز عن المنافسين *</div>
-            <textarea id="np-usp" rows="2" placeholder="مثال: مكونات طبيعية 100%، توصيل في 24 ساعة، ضمان استرداد كامل" style="width:100%;padding:8px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:13px;outline:none;direction:rtl;resize:vertical;background:var(--surface2);color:var(--text)"></textarea>
+            <textarea id="np-usp" rows="2" placeholder="مثال: مكونات طبيعية 100%، توصيل في 24 ساعة" style="width:100%;padding:8px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:13px;outline:none;direction:rtl;resize:vertical;background:var(--surface2);color:var(--text)"></textarea>
           </div>
-
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
             <div>
               <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">الجمهور المستهدف *</div>
@@ -785,17 +745,14 @@
               </select>
             </div>
           </div>
-
           <div>
-            <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">ألم الجمهور — إيه المشكلة اللي بيعانوا منها؟</div>
-            <textarea id="np-pain" rows="2" placeholder="مثال: صعوبة إيجاد عطر يعبر عن شخصيتهم ويدوم طويلاً" style="width:100%;padding:8px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:13px;outline:none;direction:rtl;resize:vertical;background:var(--surface2);color:var(--text)"></textarea>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">ألم الجمهور</div>
+            <textarea id="np-pain" rows="2" placeholder="مثال: صعوبة إيجاد عطر يعبر عن شخصيتهم" style="width:100%;padding:8px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:13px;outline:none;direction:rtl;resize:vertical;background:var(--surface2);color:var(--text)"></textarea>
           </div>
-
           <div>
             <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">أسلوب الكتابة وكلمات البراند</div>
-            <textarea id="np-voice" rows="2" placeholder="مثال: فاخر وراقي، كلمات مفضلة: أصالة، حضور، عبق. تجنب: عروض رخيصة، أسعار جنونية" style="width:100%;padding:8px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:13px;outline:none;direction:rtl;resize:vertical;background:var(--surface2);color:var(--text)"></textarea>
+            <textarea id="np-voice" rows="2" placeholder="مثال: فاخر وراقي، كلمات مفضلة: أصالة، حضور، عبق" style="width:100%;padding:8px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:13px;outline:none;direction:rtl;resize:vertical;background:var(--surface2);color:var(--text)"></textarea>
           </div>
-
           <div>
             <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">البلاتفورمات</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
@@ -806,42 +763,15 @@
               <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer"><input type="checkbox" id="np-yt" value="YouTube"> YouTube</label>
             </div>
           </div>
-
           <div>
             <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">إيموجي المشروع</div>
             <input id="np-emoji" type="text" placeholder="🌙" maxlength="2" style="width:80px;padding:8px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:20px;outline:none;background:var(--surface2);color:var(--text);text-align:center">
           </div>
-
-          <div style="border-top:0.5px solid var(--border);padding-top:12px;">
-            <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--text)">📎 ملفات المشروع</div>
-
-            <div style="margin-bottom:10px;">
-              <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">الاستراتيجية التسويقية — PDF أو Word</div>
-              <div class="upload-zone" onclick="document.getElementById('np-strategy').click()" style="padding:1rem;">
-                <input type="file" id="np-strategy" style="display:none" accept=".pdf,.doc,.docx" onchange="handleStrategyFile(this)">
-                <div style="font-size:20px;margin-bottom:4px">📄</div>
-                <div style="font-size:12px;color:var(--text2)">ارفع ملف الاستراتيجية</div>
-                <div id="np-strategy-name" style="font-size:11px;color:var(--green);margin-top:4px;"></div>
-              </div>
-            </div>
-
-            <div>
-              <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">خطط المحتوى القديمة — Excel</div>
-              <div class="upload-zone" onclick="document.getElementById('np-old-content').click()" style="padding:1rem;">
-                <input type="file" id="np-old-content" style="display:none" accept=".xlsx,.csv" onchange="handleOldContentFile(this)">
-                <div style="font-size:20px;margin-bottom:4px">📊</div>
-                <div style="font-size:12px;color:var(--text2)">ارفع خطط المحتوى القديمة</div>
-                <div id="np-old-content-name" style="font-size:11px;color:var(--green);margin-top:4px;"></div>
-              </div>
-            </div>
-          </div>
-
           <button class="btn btn-primary" style="width:100%;padding:12px;font-size:14px" onclick="saveNewProject()">✅ حفظ المشروع</button>
         </div>
       </div>
     </div>
 
-    <!-- PROJECT DETAIL (SOP) -->
     <div id="screen-sop" class="screen">
       <div class="breadcrumb">
         <span onclick="showScreen('projects')">المشاريع</span>
@@ -850,17 +780,14 @@
         <span class="sep">›</span>
         <span>SOP الشهري</span>
       </div>
-
       <div class="page-header">
         <div class="page-title" id="sop-title">🍰 Khairat Laziza — SOP أبريل 2026</div>
         <div class="page-sub">اتبع الخطوات بالترتيب لإنتاج محتوى الشهر كامل</div>
       </div>
-
       <div class="grid-2">
         <div class="card">
           <div class="card-title">📋 خطوات SOP الشهري</div>
           <div class="sop-steps">
-
             <div class="sop-step" onclick="activateStep(1)">
               <div class="step-indicator">
                 <div class="step-circle step-todo" id="circle-1">1</div>
@@ -872,7 +799,6 @@
                 <div class="step-day">اليوم 1-2</div>
               </div>
             </div>
-
             <div class="sop-step" onclick="activateStep(2)">
               <div class="step-indicator">
                 <div class="step-circle step-current" id="circle-2">2</div>
@@ -884,7 +810,6 @@
                 <div class="step-day">اليوم 3</div>
               </div>
             </div>
-
             <div class="sop-step" onclick="activateStep(3)">
               <div class="step-indicator">
                 <div class="step-circle step-todo" id="circle-3">3</div>
@@ -896,7 +821,6 @@
                 <div class="step-day">اليوم 4-5</div>
               </div>
             </div>
-
             <div class="sop-step" onclick="activateStep(4)">
               <div class="step-indicator">
                 <div class="step-circle step-todo" id="circle-4">4</div>
@@ -908,7 +832,6 @@
                 <div class="step-day">اليوم 6-20</div>
               </div>
             </div>
-
             <div class="sop-step" onclick="activateStep(5)">
               <div class="step-indicator">
                 <div class="step-circle step-todo" id="circle-5">5</div>
@@ -919,11 +842,9 @@
                 <div class="step-day">اليوم 21-25</div>
               </div>
             </div>
-
           </div>
         </div>
 
-        <!-- STEP 2 PANEL: Monthly Questions -->
         <div id="step-panel-2" class="card">
           <div class="card-title">🧭 أسئلة التوجيه الشهرية</div>
           <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:1rem;">
@@ -973,40 +894,31 @@
           <button class="btn btn-primary" style="width:100%" onclick="confirmSOPStep2()">✅ تأكيد وانتقل للخطة الشهرية</button>
         </div>
 
-        <!-- STEP 1 PANEL -->
         <div id="step-panel-1" class="card hidden">
           <div class="card-title">📊 مراجعة الشهر السابق</div>
-
-          <div style="font-size:12px;color:var(--text2);margin-bottom:10px;">الخطوة ١ — ارفع جدول المحتوى الشهر اللي فات عشان الوكيل يقيّمه</div>
-
+          <div style="font-size:12px;color:var(--text2);margin-bottom:10px;">الخطوة ١ — ارفع جدول المحتوى الشهر اللي فات</div>
           <div class="upload-zone" onclick="document.getElementById('contentFile').click()" style="margin-bottom:10px;">
             <input type="file" id="contentFile" style="display:none" accept=".xlsx,.csv" onchange="handleContentFile(this)">
             <div class="upload-icon">📋</div>
             <div class="upload-text">ارفع جدول المحتوى الشهر السابق</div>
             <div class="upload-sub">نفس الفورمات — موعد النشر، فكرة التصميم، الكابشن...</div>
           </div>
-
           <div id="content-file-status" style="display:none;background:var(--green-light);color:var(--green);padding:8px 12px;border-radius:6px;font-size:12px;margin-bottom:10px;"></div>
-
           <div style="border-top:0.5px solid var(--border);margin:10px 0;"></div>
-
           <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">الخطوة ٢ — ارفع تقرير الأداء من Meta (اختياري)</div>
-
           <div class="upload-zone" onclick="document.getElementById('csvInput').click()">
             <input type="file" id="csvInput" style="display:none" accept=".csv,.xlsx" onchange="handleCSV(this)">
             <div class="upload-icon">📂</div>
             <div class="upload-text">ارفع CSV من Meta أو TikTok</div>
             <div class="upload-sub">Facebook Insights + Instagram Insights</div>
           </div>
-
           <div style="text-align:center;margin:10px 0;font-size:12px;color:var(--text3)">أو</div>
           <button class="btn" style="width:100%;justify-content:center" onclick="activateStep(2)">ابدأ من غير بيانات →</button>
         </div>
 
-        <!-- STEP 3 PANEL -->
         <div id="step-panel-3" class="card hidden">
           <div class="card-title">📅 الخطة الشهرية</div>
-          <div style="font-size:12px;color:var(--text2);margin-bottom:12px;">بناءً على إجاباتك في الخطوة السابقة — Claude هيولّد الخطة الكاملة</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:12px;">بناءً على إجاباتك — Claude هيولّد الخطة الكاملة</div>
           <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
             <div>
               <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">عدد البوستات</div>
@@ -1021,7 +933,6 @@
           <button class="btn btn-primary" style="width:100%" onclick="goToMonthlyFromSOP()">✨ ولّد الخطة الشهرية كاملة</button>
         </div>
 
-        <!-- STEP 4 PANEL (AI Writer) -->
         <div id="step-panel-4" class="card hidden">
           <div class="card-title">✍️ اكتب مع Claude</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
@@ -1032,7 +943,6 @@
           <button class="btn btn-primary" style="width:100%" onclick="showScreen('ai-writer')">افتح محرر المحتوى →</button>
         </div>
 
-        <!-- STEP 5 PANEL -->
         <div id="step-panel-5" class="card hidden">
           <div class="card-title">✅ Checklist المراجعة النهائية</div>
           <div style="display:flex;flex-direction:column;gap:8px;">
@@ -1045,17 +955,14 @@
           </div>
           <button class="btn btn-primary" style="width:100%;margin-top:10px">🎉 إنهاء SOP الشهر</button>
         </div>
-
       </div>
     </div>
 
-    <!-- AI WRITER -->
     <div id="screen-ai-writer" class="screen">
       <div class="page-header">
         <div class="page-title">✍️ كتابة المحتوى بمساعدة Claude</div>
         <div class="page-sub">اختر المشروع والنوع وابدأ الكتابة</div>
       </div>
-
       <div class="grid-2">
         <div>
           <div class="card" style="margin-bottom:1rem;">
@@ -1063,14 +970,7 @@
             <div style="display:flex;flex-direction:column;gap:10px;">
               <div>
                 <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">المشروع</div>
-                <select id="project-select" style="width:100%;padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:13px;outline:none;background:var(--surface2);color:var(--text);direction:rtl">
-                  <option value="Khairat Laziza">🍰 Khairat Laziza</option>
-                  <option value="العقارية">🏠 العقارية</option>
-                  <option value="ميديكل كلينيك">💊 ميديكل كلينيك</option>
-                  <option value="فاشون ستور">👗 فاشون ستور</option>
-                  <option value="أكاديمية التعليم">🎓 أكاديمية التعليم</option>
-                  <option value="الهلال للعطور">🌙 الهلال للعطور</option>
-                </select>
+                <select id="project-select" style="width:100%;padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:13px;outline:none;background:var(--surface2);color:var(--text);direction:rtl"></select>
               </div>
               <div>
                 <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">نوع المحتوى</div>
@@ -1104,7 +1004,6 @@
             </div>
           </div>
         </div>
-
         <div class="chat-container">
           <div class="chat-header">
             <div class="chat-avatar">🤖</div>
@@ -1116,7 +1015,7 @@
           <div class="chat-messages" id="chat-messages">
             <div class="msg ai">
               <div class="msg-icon">🤖</div>
-              <div class="msg-bubble">أهلاً! اختر المشروع والنوع والـ Framework، وأنا هكتبلك محتوى احترافي باللهجة المطلوبة. 🚀</div>
+              <div class="msg-bubble">أهلاً! اختر المشروع والنوع والـ Framework، وأنا هكتبلك محتوى احترافي. 🚀</div>
             </div>
           </div>
           <div class="chat-input-row">
@@ -1127,13 +1026,11 @@
       </div>
     </div>
 
-    <!-- ANALYTICS -->
     <div id="screen-analytics" class="screen">
       <div class="page-header">
         <div class="page-title">📊 تحليل الأداء</div>
         <div class="page-sub">ارفع تقرير CSV من Meta أو TikTok وأنا هحلله</div>
       </div>
-
       <div class="grid-2">
         <div>
           <div class="card">
@@ -1144,16 +1041,8 @@
               <div class="upload-text">ارفع CSV من Meta Business Suite</div>
               <div class="upload-sub">Daily • Post level • Creation date filter</div>
             </div>
-            <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">الإعدادات المطلوبة من Meta:</div>
-            <div style="display:flex;flex-direction:column;gap:5px;">
-              <div style="display:flex;align-items:center;gap:6px;font-size:12px;"><span style="color:var(--green)">✓</span> Data view: Daily</div>
-              <div style="display:flex;align-items:center;gap:6px;font-size:12px;"><span style="color:var(--green)">✓</span> Content level: Post</div>
-              <div style="display:flex;align-items:center;gap:6px;font-size:12px;"><span style="color:var(--green)">✓</span> Filter: Creation date</div>
-              <div style="display:flex;align-items:center;gap:6px;font-size:12px;"><span style="color:var(--green)">✓</span> Metrics: Reach, Engagement, Video plays</div>
-            </div>
           </div>
         </div>
-
         <div class="card">
           <div class="card-title">📈 آخر تحليل — Khairat Laziza (مارس 2026)</div>
           <div style="display:flex;flex-direction:column;gap:8px;">
@@ -1162,21 +1051,15 @@
               <div style="font-size:13px;font-weight:600;">ريل: وصفة أم علي</div>
               <div style="font-size:11px;color:var(--text2)">45K مشاهدة • 3.2K تفاعل • 280 شير</div>
             </div>
-            <div style="background:var(--amber-light);border-radius:var(--radius-sm);padding:10px 12px;">
-              <div style="font-size:11px;color:var(--amber);font-weight:600;margin-bottom:2px;">⚠️ أقل محتوى أداءً</div>
-              <div style="font-size:13px;font-weight:600;">بوست: قائمة الأسعار</div>
-              <div style="font-size:11px;color:var(--text2)">890 وصول • 34 تفاعل فقط</div>
-            </div>
             <div style="background:var(--blue-light);border-radius:var(--radius-sm);padding:10px 12px;">
               <div style="font-size:11px;color:var(--blue-text);font-weight:600;margin-bottom:2px;">💡 توصية Claude</div>
-              <div style="font-size:12px;color:var(--text)">ركز على الريلز — أداءها ضعف البوستات. تجنب بوستات الأسعار الجافة.</div>
+              <div style="font-size:12px;color:var(--text)">ركز على الريلز — أداءها ضعف البوستات.</div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- MONTHLY CONTENT -->
     <div id="screen-monthly" class="screen">
       <div class="page-header">
         <div class="page-title">📅 المحتوى الدوري الشهري</div>
@@ -1188,14 +1071,7 @@
           <div style="display:flex;flex-direction:column;gap:12px;">
             <div>
               <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">المشروع</div>
-              <select id="monthly-project" style="width:100%;padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:13px;outline:none;background:var(--surface2);color:var(--text);direction:rtl">
-                  <option value="Khairat Laziza">🍰 Khairat Laziza</option>
-                  <option value="العقارية">🏠 العقارية</option>
-                  <option value="ميديكل كلينيك">💊 ميديكل كلينيك</option>
-                  <option value="فاشون ستور">👗 فاشون ستور</option>
-                  <option value="أكاديمية التعليم">🎓 أكاديمية التعليم</option>
-                  <option value="الهلال للعطور">🌙 الهلال للعطور</option>
-                </select>
+              <select id="monthly-project" style="width:100%;padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:13px;outline:none;background:var(--surface2);color:var(--text);direction:rtl"></select>
             </div>
             <div>
               <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">الشهر</div>
@@ -1245,8 +1121,6 @@
               <div>اضبط الإعدادات واضغط ولّد الخطة</div>
             </div>
           </div>
-
-          <!-- خانة التعديل التفاعلي -->
           <div id="monthly-chat-area" style="display:none;border-top:0.5px solid var(--border);margin-top:12px;padding-top:12px;">
             <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">💬 اطلب أي تعديل على الخطة</div>
             <div id="monthly-chat-messages" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;max-height:200px;overflow-y:auto;"></div>
@@ -1264,24 +1138,16 @@
         </div>
       </div>
     </div>
+
     <div id="screen-calendar" class="screen">
       <div class="page-header">
         <div class="page-title">📅 Content Calendar — أبريل 2026</div>
         <div class="page-sub">كل مشاريع الأيجنسي في مكان واحد</div>
       </div>
       <div class="card">
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem;">
-          <span class="tag tag-blue" style="cursor:pointer;padding:4px 10px;font-size:12px">الكل</span>
-          <span class="tag" style="cursor:pointer;padding:4px 10px;font-size:12px;background:var(--surface2);color:var(--text2)">🍰 Khairat</span>
-          <span class="tag" style="cursor:pointer;padding:4px 10px;font-size:12px;background:var(--surface2);color:var(--text2)">🏠 العقارية</span>
-          <span class="tag" style="cursor:pointer;padding:4px 10px;font-size:12px;background:var(--surface2);color:var(--text2)">💊 الكلينيك</span>
-        </div>
         <div style="display:flex;flex-direction:column;gap:6px;">
           <div class="content-item"><div class="content-type-dot dot-reel"></div><div style="flex:1"><div class="content-title">ريل: وصفة كنافة بالجبن</div><div class="content-platform">Khairat Laziza • IG + TK • 15 أبريل</div></div><span class="tag tag-amber">جاهز للنشر</span></div>
           <div class="content-item"><div class="content-type-dot dot-post"></div><div style="flex:1"><div class="content-title">بوست JTBD: استثمر في المستقبل</div><div class="content-platform">العقارية • FB • 16 أبريل</div></div><span class="tag tag-green">تم النشر</span></div>
-          <div class="content-item"><div class="content-type-dot dot-post"></div><div style="flex:1"><div class="content-title">بوست نصيحة: العناية بالبشرة يومياً</div><div class="content-platform">ميديكل كلينيك • IG • 17 أبريل</div></div><span class="tag tag-blue">قيد الكتابة</span></div>
-          <div class="content-item"><div class="content-type-dot dot-reel"></div><div style="flex:1"><div class="content-title">ريل: بيت أحلامك في 5 خطوات</div><div class="content-platform">العقارية • FB + IG • 18 أبريل</div></div><span class="tag tag-coral">مراجعة</span></div>
-          <div class="content-item"><div class="content-type-dot dot-post"></div><div style="flex:1"><div class="content-title">بوست Hero: قصة عميل نجح</div><div class="content-platform">Khairat Laziza • FB • 20 أبريل</div></div><span class="tag tag-blue">قيد الكتابة</span></div>
         </div>
       </div>
     </div>
@@ -1293,7 +1159,6 @@
 const TEAM_PASSWORD = 'sahab2026';
 let API_KEY = '';
 
-// تحقق من الـ login عند تحميل الصفحة
 (function checkLogin() {
   const loggedIn = localStorage.getItem('sahab_logged');
   const savedKey = localStorage.getItem('sahab_api_key');
@@ -1323,10 +1188,7 @@ function doLogin() {
 
 function saveApiKey() {
   const key = document.getElementById('api-key-input').value.trim();
-  if(!key.startsWith('sk-ant-')) {
-    alert('المفتاح غلط — لازم يبدأ بـ sk-ant-');
-    return;
-  }
+  if(!key.startsWith('sk-ant-')) { alert('المفتاح غلط — لازم يبدأ بـ sk-ant-'); return; }
   API_KEY = key;
   localStorage.setItem('sahab_api_key', key);
   document.getElementById('api-key-input').value = '••••••••••••••••';
@@ -1347,17 +1209,57 @@ function updateApiStatus(connected) {
   }
 }
 
-const TEAM_PASSWORD_CHECK = true;
-
 const N8N_WEBHOOK = 'https://sahabagency.app.n8n.cloud/webhook/8c5d2853-5a27-488b-8c8c-efa02fc142db';
+const SUPABASE_URL = 'https://kjwykytjuxfytmkuenob.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtqd3lreXRqdXhmeXRta3Vlbm9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNzE3MDgsImV4cCI6MjA5MTc0NzcwOH0.us4Yw3ZR5O___4zjiClMjOYZ8tE8PV5kmfE1TysqW6I';
 
 let currentDialect = 'gulf';
+let currentType = 'post';
+let currentFW = 'JTBD';
+let isLoading = false;
 let monthlyPostCount = 8;
 let monthlyDialect = 'خليجي';
 let monthlyFW = 'JTBD';
-// Supabase Configuration
-const SUPABASE_URL = 'https://kjwykytjuxfytmkuenob.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtqd3lreXRqdXhmeXRta3Vlbm9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNzE3MDgsImV4cCI6MjA5MTc0NzcwOH0.us4Yw3ZR5O___4zjiClMjOYZ8tE8PV5kmfE1TysqW6I';
+let sopPostCount = 8;
+let selectedCTA = 'تواصل معنا';
+let previousContentData = null;
+let monthlyChatHistory = [];
+
+// ═══════════════════════════════════════
+// callAgent — مع timeout لمنع مشكلة 524
+// ═══════════════════════════════════════
+async function callAgent(request, extraData = {}) {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 25000);
+
+    const res = await fetch(N8N_WEBHOOK, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      signal: controller.signal,
+      body: JSON.stringify({ request, ...extraData })
+    });
+
+    clearTimeout(timeout);
+
+    if(!res.ok) throw new Error('error');
+    const text = await res.text();
+    try {
+      const data = JSON.parse(text);
+      return data.output || data.message || text;
+    } catch {
+      return text;
+    }
+  } catch(e) {
+    if(e.name === 'AbortError') {
+      return 'جاري التوليد... سيظهر المحتوى في Google Sheets خلال دقيقتين ✅';
+    }
+    throw e;
+  }
+}
 
 async function supabaseQuery(table, method = 'GET', body = null, filter = '') {
   const url = `${SUPABASE_URL}/rest/v1/${table}${filter}`;
@@ -1376,7 +1278,6 @@ async function supabaseQuery(table, method = 'GET', body = null, filter = '') {
   return res.json();
 }
 
-// Projects Management
 const DEFAULT_PROJECTS = [];
 
 async function loadProjectsFromSupabase() {
@@ -1384,25 +1285,17 @@ async function loadProjectsFromSupabase() {
     const data = await supabaseQuery('projects', 'GET', null, '?select=*&order=created_at.asc');
     if(data && data.length > 0) {
       const mapped = data.map(p => ({
-        id: p.id,
-        name: p.name,
-        type: p.type || '',
-        emoji: p.emoji || '📁',
-        bg: p.bg_color || '#E8F0FE',
-        platforms: p.platforms || [],
-        dialect: p.dialect || 'خليجي',
-        audience: p.audience || '',
-        usp: p.usp || '',
-        pain: p.pain || '',
-        voice: p.voice || '',
-        product: p.product || '',
-        status: p.status || 'active'
+        id: p.id, name: p.name, type: p.type || '',
+        emoji: p.emoji || '📁', bg: p.bg_color || '#E8F0FE',
+        platforms: p.platforms || [], dialect: p.dialect || 'خليجي',
+        audience: p.audience || '', usp: p.usp || '',
+        pain: p.pain || '', voice: p.voice || '',
+        product: p.product || '', status: p.status || 'active'
       }));
       const local = getProjects();
       const supabaseIds = mapped.map(p => String(p.id));
       const localOnly = local.filter(p => !supabaseIds.includes(String(p.id)));
-      const merged = [...mapped, ...localOnly];
-      saveProjects(merged);
+      saveProjects([...mapped, ...localOnly]);
       renderProjects();
     } else {
       renderProjects();
@@ -1416,38 +1309,23 @@ async function loadProjectsFromSupabase() {
 async function saveProjectToSupabase(project) {
   try {
     await supabaseQuery('projects', 'POST', {
-      name: project.name,
-      type: project.type,
-      dialect: project.dialect,
-      audience: project.audience,
-      platforms: project.platforms,
-      framework: 'JTBD',
-      cta: 'تواصل معنا',
-      usp: project.usp,
-      pain: project.pain,
-      voice: project.voice,
-      product: project.product,
-      emoji: project.emoji,
-      bg_color: project.bg,
-      status: project.status
+      name: project.name, type: project.type, dialect: project.dialect,
+      audience: project.audience, platforms: project.platforms,
+      framework: 'JTBD', cta: 'تواصل معنا', usp: project.usp,
+      pain: project.pain, voice: project.voice, product: project.product,
+      emoji: project.emoji, bg_color: project.bg, status: project.status
     });
     await loadProjectsFromSupabase();
-  } catch(e) {
-    console.log('Supabase save error:', e);
-  }
+  } catch(e) { console.log('Supabase save error:', e); }
 }
 
 async function deleteProjectFromSupabase(id) {
   try {
     await supabaseQuery('projects', 'DELETE', null, `?id=eq.${id}`);
-    const projects = getProjects().filter(p => p.id !== id);
-    saveProjects(projects);
+    saveProjects(getProjects().filter(p => p.id !== id));
     renderProjects();
   } catch(e) {
-    console.log('Supabase delete error:', e);
-    // حذف محلي فقط لو فشل
-    const projects = getProjects().filter(p => p.id !== id);
-    saveProjects(projects);
+    saveProjects(getProjects().filter(p => p.id !== id));
     renderProjects();
   }
 }
@@ -1493,8 +1371,7 @@ function updateProjectSelects(projects) {
 function deleteProject(id) {
   if(!confirm('هل أنت متأكد من حذف المشروع؟')) return;
   if(id.startsWith('p_')) {
-    const projects = getProjects().filter(p => p.id !== id);
-    saveProjects(projects);
+    saveProjects(getProjects().filter(p => p.id !== id));
     renderProjects();
   } else {
     deleteProjectFromSupabase(id);
@@ -1514,27 +1391,6 @@ function openNewProject() {
   document.getElementById('new-project-modal').style.display = 'flex';
 }
 
-let newProjectStrategy = null;
-let newProjectOldContent = null;
-
-function handleStrategyFile(input) {
-  if(!input.files.length) return;
-  const file = input.files[0];
-  document.getElementById('np-strategy-name').textContent = '✓ ' + file.name;
-  const reader = new FileReader();
-  reader.onload = e => { newProjectStrategy = { name: file.name, data: e.target.result }; };
-  reader.readAsDataURL(file);
-}
-
-function handleOldContentFile(input) {
-  if(!input.files.length) return;
-  const file = input.files[0];
-  document.getElementById('np-old-content-name').textContent = '✓ ' + file.name;
-  const reader = new FileReader();
-  reader.onload = e => { newProjectOldContent = { name: file.name, data: e.target.result }; };
-  reader.readAsDataURL(file);
-}
-
 function closeNewProject() {
   document.getElementById('new-project-modal').style.display = 'none';
 }
@@ -1549,15 +1405,12 @@ function saveNewProject() {
   const newProject = {
     id: 'p_' + Date.now(), name, type, emoji,
     bg: colors[Math.floor(Math.random()*colors.length)],
-    platforms,
-    dialect: document.getElementById('np-dialect').value,
+    platforms, dialect: document.getElementById('np-dialect').value,
     audience: document.getElementById('np-audience').value,
     usp: document.getElementById('np-usp').value,
     pain: document.getElementById('np-pain').value,
     voice: document.getElementById('np-voice').value,
     product: document.getElementById('np-product').value,
-    strategy: newProjectStrategy ? newProjectStrategy.name : null,
-    oldContent: newProjectOldContent ? newProjectOldContent.name : null,
     status: 'active'
   };
   const projects = getProjects();
@@ -1566,59 +1419,65 @@ function saveNewProject() {
   renderProjects();
   closeNewProject();
   saveProjectToSupabase(newProject);
-  newProjectStrategy = null;
-  newProjectOldContent = null;
   ['np-name','np-type','np-product','np-usp','np-audience','np-pain','np-voice','np-emoji'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
 }
 
 setTimeout(() => { renderProjects(); loadProjectsFromSupabase(); }, 100);
 
-let sopPostCount = 8;
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const map = { dashboard: 0, projects: 1, calendar: 2, sop: 3, monthly: 4, 'ai-writer': 5, analytics: 6 };
+  const items = document.querySelectorAll('.nav-item');
+  if(map[name] !== undefined) items[map[name]].classList.add('active');
+}
 
-function selectSOPPostCount(el, count) {
-  sopPostCount = count;
-  ['sop-posts-8','sop-posts-12','sop-posts-16','sop-posts-20'].forEach(id => {
-    const t = document.getElementById(id);
-    if(t) { t.className = 'tag'; t.style.cssText = 'cursor:pointer;padding:4px 10px;font-size:12px;background:var(--surface2);color:var(--text2)'; }
+function openProject(id) {
+  showScreen('sop');
+  activateStep(2);
+}
+
+function activateStep(n) {
+  document.querySelectorAll('[id^="step-panel-"]').forEach(p => p.classList.add('hidden'));
+  document.getElementById('step-panel-' + n).classList.remove('hidden');
+}
+
+function selectFW(el) {
+  document.querySelectorAll('.fw-option').forEach(f => f.classList.remove('selected'));
+  el.classList.add('selected');
+  currentFW = el.querySelector('.fw-name').textContent;
+}
+
+function selectFWWriter(el, fw) {
+  el.parentElement.querySelectorAll('.tag').forEach(t => {
+    t.className = 'tag';
+    t.style.cssText = 'cursor:pointer;padding:4px 10px;font-size:12px;background:var(--surface2);color:var(--text2)';
   });
   el.className = 'tag tag-blue';
   el.style.cssText = 'cursor:pointer;padding:4px 10px;font-size:12px';
+  currentFW = fw;
 }
 
-function confirmSOPStep2() { activateStep(3); }
-
-function goToMonthlyFromSOP() {
-  const q1 = document.getElementById('sop-q1') ? document.getElementById('sop-q1').value : '';
-  const q2 = document.getElementById('sop-q2') ? document.getElementById('sop-q2').value : '';
-  const q3 = document.getElementById('sop-q3') ? document.getElementById('sop-q3').value : '';
-
-  const currentProjectName = document.getElementById('sop-project-name').textContent;
-
-  const sel = document.getElementById('monthly-project');
-  if(sel) {
-    for(let i = 0; i < sel.options.length; i++) {
-      if(sel.options[i].value === currentProjectName) {
-        sel.selectedIndex = i;
-        break;
-      }
-    }
-  }
-
-  const month = document.getElementById('monthly-month');
-  if(month) month.value = new Date().toLocaleDateString('ar', {month:'long', year:'numeric'});
-
-  // دمج بيانات الشهر السابق في الأسئلة
-  const prevNote = previousContentData ? `\nالمحتوى السابق: تم رفع ملف "${previousContentData.fileName}" — الوكيل سيحلله ويطور بناءً عليه` : '';
-
-  const occ = document.getElementById('monthly-occasions');
-  if(occ) occ.value = [q1 ? 'الشهر الماضي: ' + q1 : '', q3 ? 'مناسبات: ' + q3 : '', prevNote].filter(Boolean).join(' | ');
-  const goal = document.getElementById('monthly-goal');
-  if(goal) goal.value = q2 || '';
-  monthlyPostCount = sopPostCount;
-  monthlyFW = currentFW;
-  showScreen('monthly');
-  setTimeout(() => generateMonthlyContent(), 300);
+function selectCTA(el) {
+  el.parentElement.querySelectorAll('.tag').forEach(t => {
+    t.style.cssText = 'cursor:pointer;padding:4px 10px;font-size:12px;background:var(--surface2);color:var(--text2)';
+    t.className = 'tag';
+  });
+  el.className = 'tag tag-blue';
+  el.style.cssText = 'cursor:pointer;padding:4px 10px;font-size:12px';
+  selectedCTA = el.textContent.trim();
 }
+
+function setType(type) {
+  currentType = type;
+  ['post','reel','story'].forEach(t => {
+    const btn = document.getElementById('type-' + t);
+    if(btn) btn.style.cssText = t === type ? 'flex:1;justify-content:center;background:var(--blue);color:white;border-color:transparent' : 'flex:1;justify-content:center';
+  });
+}
+
+function setContentType(type) { currentType = type; showScreen('ai-writer'); setType(type); }
 
 function selectDialect(el, dialect) {
   currentDialect = dialect;
@@ -1660,209 +1519,42 @@ function selectMonthlyFW(el, fw) {
   el.style.cssText = 'cursor:pointer;padding:5px 12px;font-size:12px';
 }
 
-async function generateMonthlyContent() {
-  const projectName = document.getElementById('monthly-project').value;
-  const month = document.getElementById('monthly-month').value || 'الشهر القادم';
-  const occasions = document.getElementById('monthly-occasions').value;
-  const goal = document.getElementById('monthly-goal').value;
-  const output = document.getElementById('monthly-output');
-
-  // جيب بيانات المشروع الكاملة
-  const projectData = getProjects().find(p => p.name === projectName) || {};
-
-  output.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text3)"><div class="typing"><span></span><span></span><span></span></div><div style="margin-top:8px;font-size:12px">جاري توليد الخطة الشهرية...</div></div>';
-
-  const request = `أنت خبير تخطيط محتوى سوشيال ميديا.
-
-اعمل خطة محتوى شهرية كاملة بناءً على المعلومات التالية:
-
-=== بيانات المشروع ===
-الاسم: ${projectName}
-نوع النشاط: ${projectData.type || ''}
-المنتج أو الخدمة: ${projectData.product || ''}
-نقاط التميز (USPs): ${projectData.usp || ''}
-الجمهور المستهدف: ${projectData.audience || ''}
-ألم الجمهور: ${projectData.pain || ''}
-أسلوب الكتابة: ${projectData.voice || ''}
-اللهجة: ${projectData.dialect || monthlyDialect}
-البلاتفورمات: ${(projectData.platforms || []).join(', ')}
-
-=== تفاصيل الخطة ===
-الشهر: ${month}
-عدد البوستات: ${monthlyPostCount} بوست
-إطار العمل: ${monthlyFW} — ${monthlyFW==='JTBD'?'ركز على الوظيفة الحقيقية للعميل وليس المنتج':monthlyFW==='PAS'?'مشكلة ثم إثارة ثم حل':monthlyFW==='NLP'?'ألم ثم أمل ثم هوية':'رحلة البطل من المشكلة للحل'}
-دعوة للتصرف الرئيسية: ${selectedCTA || 'تواصل معنا'}
-${occasions ? 'مناسبات وأحداث الشهر: ' + occasions : ''}
-${goal ? 'هدف الشهر: ' + goal : ''}
-
-=== التعليمات ===
-اتبع خطوات SOP الشهري:
-- وزّع البوستات على أسابيع الشهر
-- نوّع بين بوستات تعليمية وقصص وترويج وتفاعل
-- كل بوست يعكس هوية البراند وأسلوبه المحدد
-- استخدم ألم الجمهور ونقاط التميز في الكتابة
-${previousContentData ? `- تم رفع محتوى الشهر السابق "${previousContentData.fileName}" — قيّم ما نجح وطوّره، وتجنب ما لم ينجح` : ''}
-
-أعطني النتيجة في جدول بهذا الشكل الدقيق، كل بوست في سطر، الأعمدة مفصولة بـ | :
-
-موعد النشر | فكرة التصميم | نص التصميم | الكابشن | الهاشتاجات | دعوة للتصرف
---- | --- | --- | --- | --- | ---
-[البيانات هنا]
-
-لا تكتب أي شيء قبل الجدول أو بعده. فقط الجدول.`;
-
-  try {
-    const response = await callAgent(request, { project: projectName, month: month });
-    
-    // تحليل الجدول وعرضه
-    const lines = response.split('\n').filter(l => l.trim() && !l.includes('---'));
-    const headers = lines[0] ? lines[0].split('|').map(h => h.trim()).filter(Boolean) : ['موعد النشر','فكرة التصميم','نص التصميم','الكابشن','الهاشتاجات','دعوة للتصرف'];
-    const rows = lines.slice(1).map(l => l.split('|').map(c => c.trim()).filter(Boolean)).filter(r => r.length > 2);
-
-    window.monthlyTableData = { headers, rows, project: projectName, month };
-
-    let tableHTML = `
-      <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-        <div style="font-size:13px;font-weight:600;color:var(--text)">${projectName} — ${month} (${rows.length} بوست)</div>
-        <button onclick="downloadExcel()" class="btn btn-sm" style="background:var(--green);color:white;border-color:transparent">⬇️ تحميل Excel</button>
-      </div>
-      <div style="overflow-x:auto;">
-      <table style="width:100%;border-collapse:collapse;font-size:12px;direction:rtl;">
-        <thead>
-          <tr style="background:var(--surface2);">
-            ${headers.map(h => `<th style="padding:8px 10px;text-align:right;border:0.5px solid var(--border2);font-weight:600;white-space:nowrap;color:var(--text)">${h}</th>`).join('')}
-          </tr>
-        </thead>
-        <tbody>
-          ${rows.map((row, i) => `
-            <tr style="background:${i%2===0?'var(--surface)':'var(--surface2)'}">
-              ${row.map(cell => `<td style="padding:8px 10px;text-align:right;border:0.5px solid var(--border2);color:var(--text);line-height:1.5;min-width:120px">${cell}</td>`).join('')}
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-      </div>`;
-
-    output.innerHTML = tableHTML;
-
-    // إظهار خانة التعديل التفاعلي
-    const chatArea = document.getElementById('monthly-chat-area');
-    if(chatArea) {
-      chatArea.style.display = 'block';
-      document.getElementById('monthly-chat-messages').innerHTML = '';
-      monthlyChatHistory = [];
-      addMonthlyChatMsg('ai', `تم توليد ${rows.length} بوست لـ ${projectName} — اطلب أي تعديل تحتاجه! 🎉`);
-    }
-
-    // حفظ الخطة في الذاكرة
-    savePlanToMemory(projectName, month, rows, monthlyFW, monthlyDialect);
-  } catch(e) {
-    output.innerHTML = '<div style="color:var(--coral);padding:1rem">حدث خطأ، حاول تاني.</div>';
-  }
-}
-
-function downloadExcel() {
-  const data = window.monthlyTableData;
-  if(!data) return;
-
-  let csv = data.headers.join(',') + '\n';
-  data.rows.forEach(row => {
-    csv += row.map(cell => '"' + cell.replace(/"/g, '""') + '"').join(',') + '\n';
-  });
-
-  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `خطة_${data.project}_${data.month}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-let currentType = 'post';
-let currentFW = 'JTBD';
-let isLoading = false;
-
-const projects = {
-  khairat: { name: 'Khairat Laziza', emoji: '🍰', type: 'فود & مطاعم', dialect: 'مصري عامية', platforms: 'Facebook + Instagram + TikTok' },
-  realestate: { name: 'العقارية', emoji: '🏠', type: 'عقارات', dialect: 'فصحى مبسطة', platforms: 'Facebook + Instagram' },
-  clinic: { name: 'ميديكل كلينيك', emoji: '💊', type: 'صحة وجمال', dialect: 'مصري عامية', platforms: 'Instagram + TikTok' },
-  fashion: { name: 'فاشون ستور', emoji: '👗', type: 'ملابس', dialect: 'مصري عامية', platforms: 'Instagram + TikTok' },
-  academy: { name: 'أكاديمية التعليم', emoji: '🎓', type: 'تعليم', dialect: 'فصحى مبسطة', platforms: 'Facebook + Instagram' },
-};
-
-function showScreen(name) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('screen-' + name).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const map = { dashboard: 0, projects: 1, calendar: 2, sop: 3, 'ai-writer': 4, analytics: 5 };
-  const items = document.querySelectorAll('.nav-item');
-  if (map[name] !== undefined) items[map[name]].classList.add('active');
-}
-
-function openProject(id) {
-  currentProject = id;
-  const p = projects[id] || projects.khairat;
-  document.getElementById('sop-project-name').textContent = p.name;
-  document.getElementById('sop-title').textContent = p.emoji + ' ' + p.name + ' — SOP أبريل 2026';
-  showScreen('sop');
-  activateStep(2);
-}
-
-function activateStep(n) {
-  document.querySelectorAll('[id^="step-panel-"]').forEach(p => p.classList.add('hidden'));
-  document.getElementById('step-panel-' + n).classList.remove('hidden');
-}
-
-function selectFW(el) {
-  document.querySelectorAll('.fw-option').forEach(f => f.classList.remove('selected'));
-  el.classList.add('selected');
-  currentFW = el.querySelector('.fw-name').textContent;
-}
-
-function selectFWWriter(el, fw) {
-  document.querySelectorAll('#screen-ai-writer .tag[onclick]').forEach(t => {
-    if(t.onclick && t.onclick.toString().includes('selectFWWriter')) {
-      t.className = 'tag';
-      t.style.cssText = 'cursor:pointer;padding:4px 10px;font-size:12px;background:var(--surface2);color:var(--text2)';
-    }
+function selectSOPPostCount(el, count) {
+  sopPostCount = count;
+  ['sop-posts-8','sop-posts-12','sop-posts-16','sop-posts-20'].forEach(id => {
+    const t = document.getElementById(id);
+    if(t) { t.className = 'tag'; t.style.cssText = 'cursor:pointer;padding:4px 10px;font-size:12px;background:var(--surface2);color:var(--text2)'; }
   });
   el.className = 'tag tag-blue';
   el.style.cssText = 'cursor:pointer;padding:4px 10px;font-size:12px';
-  currentFW = fw;
 }
 
-function selectCTA(el) {
-  const parent = el.parentElement;
-  parent.querySelectorAll('.tag').forEach(t => {
-    t.style.cssText = 'cursor:pointer;padding:4px 10px;font-size:12px;background:var(--surface2);color:var(--text2)';
-    t.className = 'tag';
-  });
-  el.className = 'tag tag-blue';
-  el.style.cssText = 'cursor:pointer;padding:4px 10px;font-size:12px';
-  selectedCTA = el.textContent.trim();
-}
+function confirmSOPStep2() { activateStep(3); }
 
-function setType(type) {
-  currentType = type;
-  ['post','reel','story'].forEach(t => {
-    const btn = document.getElementById('type-' + t);
-    if(t === type) {
-      btn.style.cssText = 'flex:1;justify-content:center;background:var(--blue);color:white;border-color:transparent';
-    } else {
-      btn.style.cssText = 'flex:1;justify-content:center';
-    }
-  });
+function goToMonthlyFromSOP() {
+  const q1 = document.getElementById('sop-q1')?.value || '';
+  const q2 = document.getElementById('sop-q2')?.value || '';
+  const q3 = document.getElementById('sop-q3')?.value || '';
+  const currentProjectName = document.getElementById('sop-project-name').textContent;
+  const sel = document.getElementById('monthly-project');
+  if(sel) { for(let i=0;i<sel.options.length;i++) { if(sel.options[i].value===currentProjectName){sel.selectedIndex=i;break;} } }
+  const month = document.getElementById('monthly-month');
+  if(month) month.value = new Date().toLocaleDateString('ar', {month:'long', year:'numeric'});
+  const occ = document.getElementById('monthly-occasions');
+  if(occ) occ.value = [q1?'الشهر الماضي: '+q1:'', q3?'مناسبات: '+q3:''].filter(Boolean).join(' | ');
+  const goal = document.getElementById('monthly-goal');
+  if(goal) goal.value = q2 || '';
+  monthlyPostCount = sopPostCount;
+  monthlyFW = currentFW;
+  showScreen('monthly');
+  setTimeout(() => generateMonthlyContent(), 300);
 }
-
-function setContentType(type) { currentType = type; showScreen('ai-writer'); setType(type); }
 
 function fixMixedText(text) {
   return text
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/<br>/g, '\n')
-    .replace(/\n/g, '<br>')
-    .replace(/([A-Za-z0-9][A-Za-z0-9\s\-\_\.\/\(\)]*[A-Za-z0-9]|[A-Za-z0-9])/g, '<bdi>$1</bdi>');
+    .replace(/\n/g, '<br>');
 }
 
 function addMessage(role, text) {
@@ -1889,39 +1581,16 @@ function removeTyping() {
   if(t) t.remove();
 }
 
-async function callAgent(request, extraData = {}) {
-  const res = await fetch(N8N_WEBHOOK, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    },
-    body: JSON.stringify({ request, ...extraData })
-  });
-  if(!res.ok) throw new Error('الوكيل رد بخطأ: ' + res.status);
-  const text = await res.text();
-  try {
-    const data = JSON.parse(text);
-    return data.output || data.message || text;
-  } catch {
-    return text;
-  }
-}
-
 async function generateContent() {
   if(isLoading) return;
   const idea = document.getElementById('content-idea').value;
   const projectSelect = document.getElementById('project-select');
   const projectName = projectSelect.options[projectSelect.selectedIndex].text;
   const typeLabels = { post: 'بوست سوشيال ميديا', reel: 'سكريبت ريل', story: 'نص ستوري' };
-
-  const dialectLabel = currentDialect === 'gulf' ? 'خليجي عربي راقي' : 'American English — casual and natural, not generic';
-
-  // جيب بيانات المشروع الكاملة
+  const dialectLabel = currentDialect === 'gulf' ? 'خليجي عربي راقي' : 'American English — casual and natural';
   const projectObj = getProjects().find(p => p.name === projectName) || {};
 
   const request = `اكتب ${typeLabels[currentType]} لمشروع "${projectName}".
-
 === بيانات البراند ===
 نوع النشاط: ${projectObj.type || ''}
 المنتج: ${projectObj.product || ''}
@@ -1931,7 +1600,6 @@ async function generateContent() {
 أسلوب الكتابة: ${projectObj.voice || ''}
 اللهجة: ${dialectLabel}
 إطار العمل: ${currentFW}
-
 ${idea ? 'فكرة المحتوى: ' + idea : 'اختر فكرة مناسبة للبراند.'}
 ${currentType === 'reel' ? 'سكريبت ريل 30-45 ثانية مع هوك قوي في أول 3 ثواني.' : ''}
 ${currentType === 'post' ? 'بوست جذاب مع هوك ومحتوى ودعوة للتصرف 150-250 كلمة.' : ''}
@@ -1958,18 +1626,12 @@ async function sendMessage() {
   const text = input.value.trim();
   if(!text || isLoading) return;
   input.value = '';
-
   const projectSelect = document.getElementById('project-select');
   const projectName = projectSelect.options[projectSelect.selectedIndex].text;
-
-  const request = `المشروع: ${projectName} | النوع: ${currentType} | الأسلوب: ${currentFW}
-طلب الكاتب: ${text}
-اكتب باللغة العربية فقط.`;
-
+  const request = `المشروع: ${projectName} | النوع: ${currentType} | الأسلوب: ${currentFW}\nطلب الكاتب: ${text}\nاكتب باللغة العربية فقط.`;
   isLoading = true;
   addMessage('user', text);
   addTyping();
-
   try {
     const response = await callAgent(request);
     removeTyping();
@@ -1981,58 +1643,127 @@ async function sendMessage() {
   isLoading = false;
 }
 
-// حفظ الخطة الشهرية في content_memory
+async function generateMonthlyContent() {
+  const projectName = document.getElementById('monthly-project').value;
+  const month = document.getElementById('monthly-month').value || 'الشهر القادم';
+  const occasions = document.getElementById('monthly-occasions').value;
+  const goal = document.getElementById('monthly-goal').value;
+  const output = document.getElementById('monthly-output');
+  const projectData = getProjects().find(p => p.name === projectName) || {};
+
+  output.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text3)"><div class="typing"><span></span><span></span><span></span></div><div style="margin-top:8px;font-size:12px">جاري توليد الخطة... ستظهر النتيجة في Google Sheets خلال دقيقتين</div></div>';
+
+  const request = `أنت خبير تخطيط محتوى سوشيال ميديا.
+اعمل خطة محتوى شهرية كاملة:
+
+=== بيانات المشروع ===
+الاسم: ${projectName}
+نوع النشاط: ${projectData.type || ''}
+المنتج: ${projectData.product || ''}
+نقاط التميز: ${projectData.usp || ''}
+الجمهور: ${projectData.audience || ''}
+ألم الجمهور: ${projectData.pain || ''}
+أسلوب الكتابة: ${projectData.voice || ''}
+اللهجة: ${projectData.dialect || monthlyDialect}
+البلاتفورمات: ${(projectData.platforms || []).join(', ')}
+
+=== تفاصيل الخطة ===
+الشهر: ${month}
+عدد البوستات: ${monthlyPostCount} بوست
+إطار العمل: ${monthlyFW}
+دعوة للتصرف: ${selectedCTA || 'تواصل معنا'}
+${occasions ? 'مناسبات: ' + occasions : ''}
+${goal ? 'هدف الشهر: ' + goal : ''}
+
+أعطني جدول بهذا الشكل، الأعمدة مفصولة بـ | :
+موعد النشر | فكرة التصميم | نص التصميم | الكابشن | الهاشتاجات | دعوة للتصرف
+--- | --- | --- | --- | --- | ---
+[البيانات هنا]
+فقط الجدول بدون أي نص قبله أو بعده.`;
+
+  try {
+    const response = await callAgent(request, { project: projectName, month: month });
+
+    if(response.includes('جاري التوليد')) {
+      output.innerHTML = `<div style="text-align:center;padding:3rem;color:var(--green)">
+        <div style="font-size:32px;margin-bottom:12px">✅</div>
+        <div style="font-size:14px;font-weight:600">تم إرسال الطلب بنجاح</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:8px">سيظهر المحتوى في Google Sheets خلال دقيقتين</div>
+      </div>`;
+      return;
+    }
+
+    const lines = response.split('\n').filter(l => l.trim() && !l.includes('---'));
+    const headers = lines[0] ? lines[0].split('|').map(h => h.trim()).filter(Boolean) : ['موعد النشر','فكرة التصميم','نص التصميم','الكابشن','الهاشتاجات','دعوة للتصرف'];
+    const rows = lines.slice(1).map(l => l.split('|').map(c => c.trim()).filter(Boolean)).filter(r => r.length > 2);
+
+    window.monthlyTableData = { headers, rows, project: projectName, month };
+
+    output.innerHTML = `
+      <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${projectName} — ${month} (${rows.length} بوست)</div>
+        <button onclick="downloadExcel()" class="btn btn-sm" style="background:var(--green);color:white;border-color:transparent">⬇️ تحميل Excel</button>
+      </div>
+      <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;direction:rtl;">
+        <thead><tr style="background:var(--surface2);">${headers.map(h=>`<th style="padding:8px 10px;text-align:right;border:0.5px solid var(--border2);font-weight:600;white-space:nowrap;color:var(--text)">${h}</th>`).join('')}</tr></thead>
+        <tbody>${rows.map((row,i)=>`<tr style="background:${i%2===0?'var(--surface)':'var(--surface2)'}">${row.map(cell=>`<td style="padding:8px 10px;text-align:right;border:0.5px solid var(--border2);color:var(--text);line-height:1.5;min-width:120px">${cell}</td>`).join('')}</tr>`).join('')}</tbody>
+      </table></div>`;
+
+    const chatArea = document.getElementById('monthly-chat-area');
+    if(chatArea) {
+      chatArea.style.display = 'block';
+      document.getElementById('monthly-chat-messages').innerHTML = '';
+      monthlyChatHistory = [];
+      addMonthlyChatMsg('ai', `تم توليد ${rows.length} بوست لـ ${projectName} 🎉`);
+    }
+
+    savePlanToMemory(projectName, month, rows, monthlyFW, monthlyDialect);
+  } catch(e) {
+    output.innerHTML = '<div style="color:var(--coral);padding:1rem">حدث خطأ، حاول تاني.</div>';
+  }
+}
+
+function downloadExcel() {
+  const data = window.monthlyTableData;
+  if(!data) return;
+  let csv = data.headers.join(',') + '\n';
+  data.rows.forEach(row => { csv += row.map(cell => '"' + cell.replace(/"/g, '""') + '"').join(',') + '\n'; });
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `خطة_${data.project}_${data.month}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 async function savePlanToMemory(projectName, month, rows, framework, dialect) {
   try {
     const projectData = await supabaseQuery('projects', 'GET', null, `?name=eq.${encodeURIComponent(projectName)}&select=id`);
     if(!projectData || !projectData.length) return;
-    const projectId = projectData[0].id;
-
-    const planText = rows.map((r, i) =>
-      `${i+1}. ${r[0]||''} | ${r[2]||''} | ${r[3]||''}`
-    ).join('\n');
-
+    const planText = rows.map((r,i) => `${i+1}. ${r[0]||''} | ${r[2]||''} | ${r[3]||''}`).join('\n');
     await supabaseQuery('content_memory', 'POST', {
-      project_id: projectId,
-      month: month,
-      content_type: 'monthly_plan',
-      title: `خطة ${month} — ${projectName}`,
-      body: planText,
-      plan_data: JSON.stringify(rows),
-      post_count: rows.length,
-      framework: framework,
-      dialect: dialect,
-      platform: 'all',
-      notes: `تم التوليد تلقائياً`
+      project_id: projectData[0].id, month, content_type: 'monthly_plan',
+      title: `خطة ${month} — ${projectName}`, body: planText,
+      plan_data: JSON.stringify(rows), post_count: rows.length,
+      framework, dialect, platform: 'all', notes: 'تم التوليد تلقائياً'
     });
     console.log('✅ تم حفظ الخطة في الذاكرة');
-  } catch(e) {
-    console.log('خطأ في حفظ الخطة:', e);
-  }
+  } catch(e) { console.log('خطأ في حفظ الخطة:', e); }
 }
 
-// حفظ التعديل في content_memory
 async function saveEditToMemory(projectName, month, editRequest, editResult) {
   try {
     const projectData = await supabaseQuery('projects', 'GET', null, `?name=eq.${encodeURIComponent(projectName)}&select=id`);
     if(!projectData || !projectData.length) return;
-    const projectId = projectData[0].id;
-
     await supabaseQuery('content_memory', 'POST', {
-      project_id: projectId,
-      month: month,
-      content_type: 'edit',
-      title: `تعديل: ${editRequest.substring(0, 60)}`,
-      body: editResult,
-      edit_request: editRequest,
-      edit_result: editResult,
-      platform: 'all',
-      notes: 'تعديل يدوي من الشات'
+      project_id: projectData[0].id, month, content_type: 'edit',
+      title: `تعديل: ${editRequest.substring(0,60)}`, body: editResult,
+      edit_request: editRequest, edit_result: editResult,
+      platform: 'all', notes: 'تعديل يدوي من الشات'
     });
-    console.log('✅ تم حفظ التعديل في الذاكرة');
-  } catch(e) {
-    console.log('خطأ في حفظ التعديل:', e);
-  }
+  } catch(e) { console.log('خطأ في حفظ التعديل:', e); }
 }
 
 function quickEdit(text) {
@@ -2059,17 +1790,12 @@ async function sendMonthlyChat() {
 
   const projectName = document.getElementById('monthly-project').value;
   const projectData = getProjects().find(p => p.name === projectName) || {};
-
-  // جيب الخطة الحالية من الجدول
   const currentTable = window.monthlyTableData;
-  const currentPlan = currentTable ? currentTable.rows.map((r,i) =>
-    `${i+1}. ${r[0]||''} | ${r[2]||''} | ${r[3]||''}`
-  ).join('\n') : 'لا توجد خطة محددة';
+  const currentPlan = currentTable ? currentTable.rows.map((r,i) => `${i+1}. ${r[0]||''} | ${r[2]||''} | ${r[3]||''}`).join('\n') : 'لا توجد خطة';
 
   addMonthlyChatMsg('user', text);
   monthlyChatHistory.push({ role: 'user', content: text });
 
-  // أضف indicator
   const loadDiv = document.createElement('div');
   loadDiv.id = 'monthly-loading';
   loadDiv.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
@@ -2078,45 +1804,39 @@ async function sendMonthlyChat() {
 
   isLoading = true;
   try {
-    const request = `أنت مساعد تعديل محتوى سوشيال ميديا للمشروع: ${projectName}
-البراند: ${projectData.voice || ''} | اللهجة: ${projectData.dialect || ''}
+    const request = `أنت مساعد تعديل محتوى للمشروع: ${projectName}
+اللهجة: ${projectData.dialect || ''}
 
 الخطة الحالية:
 ${currentPlan}
 
 طلب التعديل: ${text}
 
-نفّذ التعديل المطلوب وأعطني:
-١. الخطة المعدّلة كاملة بنفس الجدول والتنسيق
-٢. ملاحظة قصيرة عن ما تغيّر
-
-الجدول بنفس الأعمدة: موعد النشر | فكرة التصميم | نص التصميم | الكابشن | الهاشتاجات | دعوة للتصرف`;
+نفّذ التعديل وأعطني الخطة المعدّلة كاملة بنفس الجدول.
+الأعمدة: موعد النشر | فكرة التصميم | نص التصميم | الكابشن | الهاشتاجات | دعوة للتصرف`;
 
     const response = await callAgent(request, { project: projectName, month: currentTable?.month || '' });
 
     document.getElementById('monthly-loading')?.remove();
-    addMonthlyChatMsg('ai', response);
-    monthlyChatHistory.push({ role: 'assistant', content: response });
 
-    // حفظ التعديل في الذاكرة
-    const projectName = document.getElementById('monthly-project').value;
-    const currentTable = window.monthlyTableData;
-    saveEditToMemory(projectName, currentTable?.month || '', text, response);
+    if(response.includes('جاري التوليد')) {
+      addMonthlyChatMsg('ai', 'جاري تنفيذ التعديل... تحقق من Google Sheets خلال دقيقتين ✅');
+    } else {
+      addMonthlyChatMsg('ai', response);
+      monthlyChatHistory.push({ role: 'assistant', content: response });
+      saveEditToMemory(projectName, currentTable?.month || '', text, response);
 
-    // تحديث الجدول لو في جدول جديد في الرد
-    const lines = response.split('\n').filter(l => l.trim() && !l.includes('---'));
-    const tableLines = lines.filter(l => l.includes('|') && l.split('|').length >= 4);
-    if(tableLines.length > 2) {
-      const rows = tableLines.slice(1).map(l => l.split('|').map(c=>c.trim()).filter(Boolean)).filter(r=>r.length>=4);
-      if(rows.length > 0 && currentTable) {
-        currentTable.rows = rows;
-        window.monthlyTableData = currentTable;
-        // تحديث الجدول في الشاشة
-        const headers = currentTable.headers;
-        document.getElementById('monthly-output').querySelector('tbody').innerHTML = rows.map((row,i) => `
-          <tr style="background:${i%2===0?'var(--surface)':'var(--surface2)'}">
-            ${row.map(cell=>`<td style="padding:8px 10px;text-align:right;border:0.5px solid var(--border2);color:var(--text);line-height:1.5;min-width:120px">${cell}</td>`).join('')}
-          </tr>`).join('');
+      const lines = response.split('\n').filter(l => l.trim() && !l.includes('---'));
+      const tableLines = lines.filter(l => l.includes('|') && l.split('|').length >= 4);
+      if(tableLines.length > 2 && currentTable) {
+        const rows = tableLines.slice(1).map(l => l.split('|').map(c=>c.trim()).filter(Boolean)).filter(r=>r.length>=4);
+        if(rows.length > 0) {
+          currentTable.rows = rows;
+          window.monthlyTableData = currentTable;
+          const tbody = document.getElementById('monthly-output').querySelector('tbody');
+          if(tbody) tbody.innerHTML = rows.map((row,i)=>`<tr style="background:${i%2===0?'var(--surface)':'var(--surface2)'}">
+            ${row.map(cell=>`<td style="padding:8px 10px;text-align:right;border:0.5px solid var(--border2);color:var(--text);line-height:1.5;min-width:120px">${cell}</td>`).join('')}</tr>`).join('');
+        }
       }
     }
   } catch(e) {
@@ -2126,51 +1846,31 @@ ${currentPlan}
   isLoading = false;
 }
 
-let monthlyChatHistory_ref = [];
-
 function handleContentFile(input) {
   if(!input.files.length) return;
   const file = input.files[0];
   const status = document.getElementById('content-file-status');
-
   const reader = new FileReader();
   reader.onload = function(e) {
-    try {
-      // قراءة الملف بـ SheetJS في المتصفح
-      status.style.display = 'block';
-      status.textContent = '✅ تم رفع الملف: ' + file.name + ' — سيتم تحليله عند توليد الخطة';
-      previousContentData = { fileName: file.name, fileData: e.target.result };
-
-      // تعليم الخطوة الأولى كمكتملة
-      const circle = document.getElementById('circle-1');
-      if(circle) { circle.className = 'step-circle step-done'; circle.textContent = '✓'; }
-
-      setTimeout(() => activateStep(2), 1500);
-    } catch(err) {
-      status.style.display = 'block';
-      status.style.background = 'var(--coral-light)';
-      status.style.color = 'var(--coral)';
-      status.textContent = '⚠️ خطأ في قراءة الملف';
-    }
+    status.style.display = 'block';
+    status.textContent = '✅ تم رفع الملف: ' + file.name;
+    previousContentData = { fileName: file.name, fileData: e.target.result };
+    const circle = document.getElementById('circle-1');
+    if(circle) { circle.className = 'step-circle step-done'; circle.textContent = '✓'; }
+    setTimeout(() => activateStep(2), 1500);
   };
   reader.readAsDataURL(file);
 }
+
 function handleCSV(input) {
   if(input.files.length > 0) {
-    const fileName = input.files[0].name;
     activateStep(2);
-    const panel = document.getElementById('step-panel-2');
-    const msg = document.createElement('div');
-    msg.style.cssText = 'background:var(--green-light);color:var(--green);padding:8px 12px;border-radius:6px;font-size:12px;margin-bottom:10px;';
-    msg.innerHTML = '✅ تم رفع التقرير: ' + fileName;
-    panel.insertBefore(msg, panel.firstChild);
-    setTimeout(() => msg.remove(), 5000);
   }
 }
 
 function handleAnalyticsCSV(input) {
   if(input.files.length > 0) {
-    alert('تم استقبال الملف: ' + input.files[0].name + '\nجاري التحليل...');
+    alert('تم استقبال الملف: ' + input.files[0].name);
   }
 }
 </script>
