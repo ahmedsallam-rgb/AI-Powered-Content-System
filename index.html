@@ -1370,12 +1370,7 @@ function updateProjectSelects(projects) {
 
 function deleteProject(id) {
   if(!confirm('هل أنت متأكد من حذف المشروع؟')) return;
-  if(id.startsWith('p_')) {
-    saveProjects(getProjects().filter(p => p.id !== id));
-    renderProjects();
-  } else {
-    deleteProjectFromSupabase(id);
-  }
+  deleteProjectFromSupabase(id);
 }
 
 function openProjectById(id) {
