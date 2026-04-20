@@ -1293,13 +1293,24 @@
 const TEAM_PASSWORD = 'sahab2026';
 let API_KEY = '';
 
+// تحقق من الـ login عند تحميل الصفحة
+(function checkLogin() {
+  const loggedIn = localStorage.getItem('sahab_logged');
+  const savedKey = localStorage.getItem('sahab_api_key');
+  if(loggedIn === 'true') {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('api-bar').style.display = 'flex';
+    if(savedKey) { API_KEY = savedKey; updateApiStatus(true); }
+  }
+})();
+
 function doLogin() {
   const val = document.getElementById('password-input').value;
   if(val === TEAM_PASSWORD) {
+    localStorage.setItem('sahab_logged', 'true');
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('api-bar').style.display = 'flex';
-    // لو في مفتاح محفوظ مسبقاً في الجلسة
-    const saved = sessionStorage.getItem('sahab_api_key');
+    const saved = localStorage.getItem('sahab_api_key');
     if(saved) { API_KEY = saved; updateApiStatus(true); }
   } else {
     const err = document.getElementById('login-error');
@@ -1317,7 +1328,7 @@ function saveApiKey() {
     return;
   }
   API_KEY = key;
-  sessionStorage.setItem('sahab_api_key', key);
+  localStorage.setItem('sahab_api_key', key);
   document.getElementById('api-key-input').value = '••••••••••••••••';
   updateApiStatus(true);
 }
@@ -1436,13 +1447,13 @@ async function deleteProjectFromSupabase(id) {
 
 function getProjects() {
   try {
-    const saved = sessionStorage.getItem('sahab_projects');
+    const saved = localStorage.getItem('sahab_projects');
     return saved ? JSON.parse(saved) : DEFAULT_PROJECTS;
   } catch { return DEFAULT_PROJECTS; }
 }
 
 function saveProjects(projects) {
-  try { sessionStorage.setItem('sahab_projects', JSON.stringify(projects)); } catch {}
+  try { localStorage.setItem('sahab_projects', JSON.stringify(projects)); } catch {}
 }
 
 function renderProjects() {
