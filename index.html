@@ -1231,7 +1231,7 @@ let monthlyChatHistory = [];
 async function callAgent(request, extraData = {}) {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 25000);
+    const timeout = setTimeout(() => controller.abort(), 180000);
 
     const res = await fetch(N8N_WEBHOOK, {
       method: 'POST',
@@ -1249,6 +1249,9 @@ async function callAgent(request, extraData = {}) {
     const text = await res.text();
     try {
       const data = JSON.parse(text);
+      if(data.sheetName || data.sheetId) {
+        window.lastSheetInfo = { name: data.sheetName, id: data.sheetId };
+      }
       return data.output || data.message || text;
     } catch {
       return text;
@@ -1681,42 +1684,64 @@ ${goal ? 'هدف الشهر: ' + goal : ''}
 
     if(response.includes('جاري التوليد')) {
       output.innerHTML = `<div style="text-align:center;padding:3rem;color:var(--green)">
-        <div style="font-size:32px;margin-bottom:12px">✅</div>
-        <div style="font-size:14px;font-weight:600">تم إرسال الطلب بنجاح</div>
-        <div style="font-size:12px;color:var(--text2);margin-top:8px">سيظهر المحتوى في Google Sheets خلال دقيقتين</div>
+        <div style="font-size:32px;margin-bottom:12px">⏳</div>
+        <div style="font-size:14px;font-weight:600">التوليد لسه شغّال...</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:8px">العملية بتاخد أكتر من 3 دقائق، افتح Google Sheets لمتابعة النتيجة</div>
+        <button onclick="generateMonthlyContent()" class="btn btn-sm" style="margin-top:16px">🔄 إعادة محاولة العرض</button>
       </div>`;
       return;
     }
 
     const lines = response.split('\n').filter(l => l.trim() && !l.includes('---'));
-    const headers = lines[0] ? lines[0].split('|').map(h => h.trim()).filter(Boolean) : ['موعد النشر','فكرة التصميم','نص التصميم','الكابشن','الهاشتاجات','دعوة للتصرف'];
-    const rows = lines.slice(1).map(l => l.split('|').map(c => c.trim()).filter(Boolean)).filter(r => r.length > 2);
+    const tableLines = lines.filter(l => l.includes('|') && l.split('|').length >= 4);
+    const headers = tableLines[0] ? tableLines[0].split('|').map(h => h.trim()).filter(Boolean) : ['موعد النشر','فكرة التصميم','نص التصميم','الكابشن','الهاشتاجات','دعوة للتصرف'];
+    const rows = tableLines.slice(1).map(l => l.split('|').map(c => c.trim()).filter(Boolean)).filter(r => r.length >= 4);
+
+    if(rows.length === 0) {
+      output.innerHTML = `<div style="text-align:center;padding:3rem;color:var(--text2)">
+        <div style="font-size:32px;margin-bottom:12px">⚠️</div>
+        <div style="font-size:14px;font-weight:600">الرد اتستقبل بس مفيش جدول</div>
+        <div style="font-size:12px;margin-top:8px;white-space:pre-wrap;text-align:right;direction:rtl;padding:12px;background:var(--surface2);border-radius:8px;margin-top:12px;max-height:300px;overflow:auto">${response.substring(0, 500)}</div>
+      </div>`;
+      return;
+    }
 
     window.monthlyTableData = { headers, rows, project: projectName, month };
+
+    const sheetLink = window.lastSheetInfo?.id ? `https://docs.google.com/spreadsheets/d/${window.lastSheetInfo.id}/edit` : null;
 
     output.innerHTML = `
       <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
         <div style="font-size:13px;font-weight:600;color:var(--text)">${projectName} — ${month} (${rows.length} بوست)</div>
-        <button onclick="downloadExcel()" class="btn btn-sm" style="background:var(--green);color:white;border-color:transparent">⬇️ تحميل Excel</button>
+        <div style="display:flex;gap:6px">
+          ${sheetLink ? `<a href="${sheetLink}" target="_blank" class="btn btn-sm" style="background:var(--blue);color:white;border-color:transparent;text-decoration:none">📊 فتح Google Sheets</a>` : ''}
+          <button onclick="downloadExcel()" class="btn btn-sm" style="background:var(--green);color:white;border-color:transparent">⬇️ تحميل Excel</button>
+        </div>
       </div>
       <div style="overflow-x:auto;">
-      <table style="width:100%;border-collapse:collapse;font-size:12px;direction:rtl;">
+      <table id="monthly-table" style="width:100%;border-collapse:collapse;font-size:12px;direction:rtl;">
         <thead><tr style="background:var(--surface2);">${headers.map(h=>`<th style="padding:8px 10px;text-align:right;border:0.5px solid var(--border2);font-weight:600;white-space:nowrap;color:var(--text)">${h}</th>`).join('')}</tr></thead>
-        <tbody>${rows.map((row,i)=>`<tr style="background:${i%2===0?'var(--surface)':'var(--surface2)'}">${row.map(cell=>`<td style="padding:8px 10px;text-align:right;border:0.5px solid var(--border2);color:var(--text);line-height:1.5;min-width:120px">${cell}</td>`).join('')}</tr>`).join('')}</tbody>
-      </table></div>`;
+        <tbody>${rows.map((row,i)=>`<tr style="background:${i%2===0?'var(--surface)':'var(--surface2)'}">${row.map((cell,j)=>`<td contenteditable="true" data-row="${i}" data-col="${j}" oninput="updateCell(${i},${j},this.innerText)" style="padding:8px 10px;text-align:right;border:0.5px solid var(--border2);color:var(--text);line-height:1.5;min-width:120px;outline:none" onfocus="this.style.background='var(--accent-light, #fff4d6)'" onblur="this.style.background=''">${cell}</td>`).join('')}</tr>`).join('')}</tbody>
+      </table></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:8px;text-align:center">💡 يمكنك تعديل أي خلية مباشرة بالنقر عليها، أو استخدام الشات بالأسفل لتعديلات شاملة</div>`;
 
     const chatArea = document.getElementById('monthly-chat-area');
     if(chatArea) {
       chatArea.style.display = 'block';
       document.getElementById('monthly-chat-messages').innerHTML = '';
       monthlyChatHistory = [];
-      addMonthlyChatMsg('ai', `تم توليد ${rows.length} بوست لـ ${projectName} 🎉`);
+      addMonthlyChatMsg('ai', `تم توليد ${rows.length} بوست لـ ${projectName} 🎉 — تقدر تعدّل بالضغط على أي خلية أو تكتب طلب تعديل هنا`);
     }
 
     savePlanToMemory(projectName, month, rows, monthlyFW, monthlyDialect);
   } catch(e) {
     output.innerHTML = '<div style="color:var(--coral);padding:1rem">حدث خطأ، حاول تاني.</div>';
   }
+}
+
+function updateCell(rowIdx, colIdx, value) {
+  if(!window.monthlyTableData) return;
+  window.monthlyTableData.rows[rowIdx][colIdx] = value.trim();
 }
 
 function downloadExcel() {
@@ -1830,7 +1855,7 @@ ${currentPlan}
           window.monthlyTableData = currentTable;
           const tbody = document.getElementById('monthly-output').querySelector('tbody');
           if(tbody) tbody.innerHTML = rows.map((row,i)=>`<tr style="background:${i%2===0?'var(--surface)':'var(--surface2)'}">
-            ${row.map(cell=>`<td style="padding:8px 10px;text-align:right;border:0.5px solid var(--border2);color:var(--text);line-height:1.5;min-width:120px">${cell}</td>`).join('')}</tr>`).join('');
+            ${row.map((cell,j)=>`<td contenteditable="true" data-row="${i}" data-col="${j}" oninput="updateCell(${i},${j},this.innerText)" style="padding:8px 10px;text-align:right;border:0.5px solid var(--border2);color:var(--text);line-height:1.5;min-width:120px;outline:none" onfocus="this.style.background='var(--accent-light, #fff4d6)'" onblur="this.style.background=''">${cell}</td>`).join('')}</tr>`).join('');
         }
       }
     }
