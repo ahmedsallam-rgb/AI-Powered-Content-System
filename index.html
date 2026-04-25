@@ -1642,36 +1642,35 @@ async function sendMessage() {
 }
 
 async function pollSupabaseForNewContent(projectName, month, startTime) {
-  const maxAttempts = 30; // 30 × 10s = 5 دقائق كحد أقصى
+  const maxAttempts = 30;
   const intervalMs = 10000;
   const statusEl = () => document.getElementById('poll-status');
+  const startMs = new Date(startTime).getTime();
 
-  // طبّع الـ startTime لـ ISO بدون milliseconds
-  const startISO = new Date(startTime).toISOString();
+  console.log('🔍 Polling started at:', startTime, 'startMs:', startMs);
 
   for(let attempt = 1; attempt <= maxAttempts; attempt++) {
     await new Promise(r => setTimeout(r, intervalMs));
 
     try {
-      // جيب أحدث صف في content_memory مهما كانت قيمة month عشان نشوف لو في حاجة جديدة فعلاً
-      const filter = `?order=created_at.desc&limit=3`;
-      const data = await supabaseQuery('content_memory', 'GET', null, filter);
+      const data = await supabaseQuery('content_memory', 'GET', null, '?order=created_at.desc&limit=3');
+      console.log(`Poll #${attempt}: got`, data?.length, 'rows');
 
       if(data && data.length > 0) {
-        // ابحث عن صف اتعمل بعد startTime وفيه body فيه جدول
         for(const row of data) {
-          if(!row.created_at || !row.body) continue;
+          if(!row.body) continue;
 
-          const rowTime = new Date(row.created_at).getTime();
-          const startMs = new Date(startISO).getTime();
+          const rowMs = row.created_at ? new Date(row.created_at).getTime() : 0;
+          const ageSeconds = (Date.now() - rowMs) / 1000;
+          const pipeCount = (row.body.match(/\|/g) || []).length;
 
-          // تأكد إن الصف ده اتعمل بعد ما بدأنا، وفيه جدول حقيقي
-          if(rowTime >= startMs - 5000 && row.body.includes('|')) {
-            const pipeCount = (row.body.match(/\|/g) || []).length;
-            if(pipeCount > 20) { // جدول فيه على الأقل 4 صفوف بـ 6 أعمدة
-              if(statusEl()) statusEl().textContent = '✅ تم استلام المحتوى!';
-              return row.body;
-            }
+          console.log(`  → row created_at=${row.created_at}, age=${ageSeconds.toFixed(0)}s, pipes=${pipeCount}`);
+
+          // قبول أي صف عمره أقل من 10 دقائق وفيه pipes أكتر من 10
+          if(ageSeconds < 600 && pipeCount > 10 && rowMs > startMs - 30000) {
+            console.log('✅ Match found!');
+            if(statusEl()) statusEl().textContent = '✅ تم استلام المحتوى!';
+            return row.body;
           }
         }
       }
