@@ -1645,33 +1645,34 @@ async function pollSupabaseForNewContent(projectName, month, startTime) {
   const maxAttempts = 30;
   const intervalMs = 10000;
   const statusEl = () => document.getElementById('poll-status');
-  const startMs = new Date(startTime).getTime();
 
-  console.log('🔍 Polling started at:', startTime, 'startMs:', startMs);
+  // خد snapshot لآخر صف موجود قبل ما نبدأ
+  let baselineRowId = null;
+  try {
+    const initial = await supabaseQuery('content_memory', 'GET', null, '?order=created_at.desc&limit=1');
+    if(initial && initial.length > 0) {
+      baselineRowId = initial[0].id;
+      console.log('🔍 Baseline row id:', baselineRowId);
+    }
+  } catch(e) { console.error('Baseline error:', e); }
 
   for(let attempt = 1; attempt <= maxAttempts; attempt++) {
     await new Promise(r => setTimeout(r, intervalMs));
 
     try {
-      const data = await supabaseQuery('content_memory', 'GET', null, '?order=created_at.desc&limit=3');
-      console.log(`Poll #${attempt}: got`, data?.length, 'rows');
+      const data = await supabaseQuery('content_memory', 'GET', null, '?order=created_at.desc&limit=1');
+      console.log(`Poll #${attempt}:`, data?.length, 'rows');
 
       if(data && data.length > 0) {
-        for(const row of data) {
-          if(!row.body) continue;
+        const latest = data[0];
+        const isNew = latest.id !== baselineRowId;
+        const pipeCount = (latest.body?.match(/\|/g) || []).length;
+        console.log(`  → id=${latest.id?.substring(0,8)}, isNew=${isNew}, pipes=${pipeCount}`);
 
-          const rowMs = row.created_at ? new Date(row.created_at).getTime() : 0;
-          const ageSeconds = (Date.now() - rowMs) / 1000;
-          const pipeCount = (row.body.match(/\|/g) || []).length;
-
-          console.log(`  → row created_at=${row.created_at}, age=${ageSeconds.toFixed(0)}s, pipes=${pipeCount}`);
-
-          // قبول أي صف عمره أقل من 10 دقائق وفيه pipes أكتر من 10
-          if(ageSeconds < 600 && pipeCount > 10 && rowMs > startMs - 30000) {
-            console.log('✅ Match found!');
-            if(statusEl()) statusEl().textContent = '✅ تم استلام المحتوى!';
-            return row.body;
-          }
+        if(isNew && latest.body && pipeCount > 10) {
+          console.log('✅ New content detected!');
+          if(statusEl()) statusEl().textContent = '✅ تم استلام المحتوى!';
+          return latest.body;
         }
       }
 
