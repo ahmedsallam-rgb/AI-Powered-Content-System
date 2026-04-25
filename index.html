@@ -1641,6 +1641,51 @@ async function sendMessage() {
   isLoading = false;
 }
 
+async function pollSupabaseForNewContent(projectName, month, startTime) {
+  const maxAttempts = 30; // 30 × 10s = 5 دقائق كحد أقصى
+  const intervalMs = 10000;
+  const statusEl = () => document.getElementById('poll-status');
+
+  // طبّع الـ startTime لـ ISO بدون milliseconds
+  const startISO = new Date(startTime).toISOString();
+
+  for(let attempt = 1; attempt <= maxAttempts; attempt++) {
+    await new Promise(r => setTimeout(r, intervalMs));
+
+    try {
+      // جيب أحدث صف في content_memory مهما كانت قيمة month عشان نشوف لو في حاجة جديدة فعلاً
+      const filter = `?order=created_at.desc&limit=3`;
+      const data = await supabaseQuery('content_memory', 'GET', null, filter);
+
+      if(data && data.length > 0) {
+        // ابحث عن صف اتعمل بعد startTime وفيه body فيه جدول
+        for(const row of data) {
+          if(!row.created_at || !row.body) continue;
+
+          const rowTime = new Date(row.created_at).getTime();
+          const startMs = new Date(startISO).getTime();
+
+          // تأكد إن الصف ده اتعمل بعد ما بدأنا، وفيه جدول حقيقي
+          if(rowTime >= startMs - 5000 && row.body.includes('|')) {
+            const pipeCount = (row.body.match(/\|/g) || []).length;
+            if(pipeCount > 20) { // جدول فيه على الأقل 4 صفوف بـ 6 أعمدة
+              if(statusEl()) statusEl().textContent = '✅ تم استلام المحتوى!';
+              return row.body;
+            }
+          }
+        }
+      }
+
+      const elapsed = attempt * 10;
+      if(statusEl()) statusEl().textContent = `جاري التوليد... مر ${elapsed} ثانية`;
+    } catch(e) {
+      console.error('Poll attempt', attempt, 'error:', e);
+    }
+  }
+
+  return null;
+}
+
 async function generateMonthlyContent() {
   const projectName = document.getElementById('monthly-project').value;
   const month = document.getElementById('monthly-month').value || 'الشهر القادم';
@@ -1680,14 +1725,26 @@ ${goal ? 'هدف الشهر: ' + goal : ''}
 فقط الجدول بدون أي نص قبله أو بعده.`;
 
   try {
-    const response = await callAgent(request, { project: projectName, month: month });
+    const startTime = new Date().toISOString();
 
-    if(response.includes('جاري التوليد')) {
-      output.innerHTML = `<div style="text-align:center;padding:3rem;color:var(--green)">
-        <div style="font-size:32px;margin-bottom:12px">⏳</div>
-        <div style="font-size:14px;font-weight:600">التوليد لسه شغّال...</div>
-        <div style="font-size:12px;color:var(--text2);margin-top:8px">العملية بتاخد أكتر من 3 دقائق، افتح Google Sheets لمتابعة النتيجة</div>
-        <button onclick="generateMonthlyContent()" class="btn btn-sm" style="margin-top:16px">🔄 إعادة محاولة العرض</button>
+    // إطلاق الطلب لـ n8n في الخلفية (بدون انتظار)
+    callAgent(request, { project: projectName, month: month }).catch(e => console.log('n8n background:', e));
+
+    // Polling على Supabase لحد ما المحتوى يجي
+    output.innerHTML = `<div style="text-align:center;padding:3rem;color:var(--text2)">
+      <div class="typing"><span></span><span></span><span></span></div>
+      <div id="poll-status" style="font-size:13px;margin-top:12px;color:var(--text2)">جاري التوليد... (قد يستغرق 1-3 دقائق)</div>
+      <div style="font-size:11px;margin-top:4px;color:var(--text3)">يتم التحقق كل 10 ثوانٍ من Supabase</div>
+    </div>`;
+
+    const response = await pollSupabaseForNewContent(projectName, month, startTime);
+
+    if(!response) {
+      output.innerHTML = `<div style="text-align:center;padding:3rem;color:var(--coral)">
+        <div style="font-size:32px;margin-bottom:12px">⏱️</div>
+        <div style="font-size:14px;font-weight:600">انتهت المدة بدون استلام محتوى</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:8px">تحقق من n8n Executions أو Google Sheets</div>
+        <button onclick="generateMonthlyContent()" class="btn btn-sm" style="margin-top:16px">🔄 إعادة المحاولة</button>
       </div>`;
       return;
     }
