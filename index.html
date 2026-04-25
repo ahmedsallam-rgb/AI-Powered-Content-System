@@ -1029,33 +1029,41 @@
     <div id="screen-analytics" class="screen">
       <div class="page-header">
         <div class="page-title">📊 تحليل الأداء</div>
-        <div class="page-sub">ارفع تقرير CSV من Meta أو TikTok وأنا هحلله</div>
+        <div class="page-sub">ارفع تقرير CSV من Meta Business Suite، وسأربطه بالخطة الشهرية تلقائياً</div>
       </div>
       <div class="grid-2">
-        <div>
-          <div class="card">
-            <div class="card-title">📂 رفع تقرير</div>
-            <div class="upload-zone" style="margin-bottom:1rem;" onclick="document.getElementById('analyticsCSV').click()">
+        <div class="card">
+          <div class="card-title">📂 رفع تقرير الأداء</div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div>
+              <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">المشروع</div>
+              <select id="analytics-project" style="width:100%;padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:13px;outline:none;background:var(--surface2);color:var(--text);direction:rtl"></select>
+            </div>
+            <div>
+              <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">الشهر</div>
+              <input type="text" id="analytics-month" placeholder="مثال: أبريل 2026" style="width:100%;padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:13px;outline:none;background:var(--surface2);color:var(--text);direction:rtl">
+            </div>
+            <div class="upload-zone" onclick="document.getElementById('analyticsCSV').click()">
               <input type="file" id="analyticsCSV" style="display:none" accept=".csv,.xlsx" onchange="handleAnalyticsCSV(this)">
               <div class="upload-icon">📊</div>
               <div class="upload-text">ارفع CSV من Meta Business Suite</div>
-              <div class="upload-sub">Daily • Post level • Creation date filter</div>
+              <div class="upload-sub">Instagram • Post level • شهر كامل</div>
             </div>
+            <div id="analytics-status" style="font-size:12px;color:var(--text2);text-align:center;"></div>
           </div>
         </div>
         <div class="card">
-          <div class="card-title">📈 آخر تحليل — Khairat Laziza (مارس 2026)</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <div style="background:var(--green-light);border-radius:var(--radius-sm);padding:10px 12px;">
-              <div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:2px;">🏆 أعلى محتوى أداءً</div>
-              <div style="font-size:13px;font-weight:600;">ريل: وصفة أم علي</div>
-              <div style="font-size:11px;color:var(--text2)">45K مشاهدة • 3.2K تفاعل • 280 شير</div>
-            </div>
-            <div style="background:var(--blue-light);border-radius:var(--radius-sm);padding:10px 12px;">
-              <div style="font-size:11px;color:var(--blue-text);font-weight:600;margin-bottom:2px;">💡 توصية Claude</div>
-              <div style="font-size:12px;color:var(--text)">ركز على الريلز — أداءها ضعف البوستات.</div>
-            </div>
+          <div class="card-title">📈 ملخص الأداء</div>
+          <div id="analytics-summary" style="display:flex;flex-direction:column;gap:8px;">
+            <div style="font-size:12px;color:var(--text3);text-align:center;padding:2rem 0">ارفع تقرير لتظهر النتائج</div>
           </div>
+        </div>
+      </div>
+
+      <div id="analytics-results" style="margin-top:1rem;display:none;">
+        <div class="card">
+          <div class="card-title">📋 تفاصيل الأداء حسب البوست</div>
+          <div id="analytics-table-container" style="overflow-x:auto"></div>
         </div>
       </div>
     </div>
@@ -2001,10 +2009,294 @@ function handleCSV(input) {
   }
 }
 
-function handleAnalyticsCSV(input) {
-  if(input.files.length > 0) {
-    alert('تم استقبال الملف: ' + input.files[0].name);
+// === Performance Analytics System ===
+
+function parseAnalyticsCSV(text) {
+  const rows = [];
+  let row = [], cell = '', inQuotes = false;
+  for(let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if(c === '"' && text[i+1] === '"') { cell += '"'; i++; }
+    else if(c === '"') inQuotes = !inQuotes;
+    else if(c === ',' && !inQuotes) { row.push(cell); cell = ''; }
+    else if((c === '\n' || c === '\r') && !inQuotes) {
+      if(cell || row.length) { row.push(cell); rows.push(row); row = []; cell = ''; }
+      if(c === '\r' && text[i+1] === '\n') i++;
+    }
+    else cell += c;
   }
+  if(cell || row.length) { row.push(cell); rows.push(row); }
+  return rows;
+}
+
+function calculateEngagementRate(post) {
+  const reach = parseInt(post.reach) || 0;
+  if(reach === 0) return 0;
+  const interactions = (parseInt(post.likes) || 0) + (parseInt(post.comments) || 0) + (parseInt(post.saves) || 0) + (parseInt(post.shares) || 0);
+  return parseFloat(((interactions / reach) * 100).toFixed(2));
+}
+
+function getPerformanceCategory(er) {
+  if(er >= 4) return { label: '🟢 جيد', color: 'var(--green)', bg: 'var(--green-light)' };
+  if(er >= 2) return { label: '🟡 متوسط', color: '#a16207', bg: '#fef3c7' };
+  return { label: '🔴 ضعيف', color: 'var(--coral)', bg: '#fee2e2' };
+}
+
+// تحويل تاريخ من "04/08/2026 09:00" إلى "April 8, 2026" أو العكس للـ matching
+function normalizeDate(dateStr) {
+  if(!dateStr) return null;
+  // mm/dd/yyyy hh:mm
+  const m = dateStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m) {
+    const month = parseInt(m[1]), day = parseInt(m[2]), year = parseInt(m[3]);
+    return { day, month, year, str: `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}` };
+  }
+  // قد يكون التاريخ في الخطة بصيغة "April 8, 2026" أو "8 أبريل" إلخ
+  const monthMap = {
+    january:1, february:2, march:3, april:4, may:5, june:6, july:7, august:8, september:9, october:10, november:11, december:12,
+    'يناير':1,'فبراير':2,'مارس':3,'أبريل':4,'ابريل':4,'مايو':5,'يونيو':6,'يوليو':7,'أغسطس':8,'اغسطس':8,'سبتمبر':9,'أكتوبر':10,'اكتوبر':10,'نوفمبر':11,'ديسمبر':12
+  };
+  const m2 = dateStr.toLowerCase().match(/(\d{1,2})\s*([a-zأ-ي]+)|(january|february|march|april|may|june|july|august|september|october|november|december|يناير|فبراير|مارس|أبريل|ابريل|مايو|يونيو|يوليو|أغسطس|اغسطس|سبتمبر|أكتوبر|اكتوبر|نوفمبر|ديسمبر)\s*(\d{1,2})/);
+  if(m2) {
+    let day, monthName;
+    if(m2[1] && m2[2]) { day = parseInt(m2[1]); monthName = m2[2]; }
+    else if(m2[3] && m2[4]) { day = parseInt(m2[4]); monthName = m2[3]; }
+    const month = monthMap[monthName];
+    if(month && day) {
+      const yearMatch = dateStr.match(/20\d{2}/);
+      const year = yearMatch ? parseInt(yearMatch[0]) : new Date().getFullYear();
+      return { day, month, year, str: `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}` };
+    }
+  }
+  return null;
+}
+
+// مقارنة بسيطة بين نصين (similarity %)
+function textSimilarity(a, b) {
+  if(!a || !b) return 0;
+  a = a.toLowerCase().replace(/[^\u0600-\u06ffa-z0-9 ]/g,'').trim();
+  b = b.toLowerCase().replace(/[^\u0600-\u06ffa-z0-9 ]/g,'').trim();
+  if(!a || !b) return 0;
+  const wordsA = new Set(a.split(/\s+/).filter(w => w.length > 2));
+  const wordsB = new Set(b.split(/\s+/).filter(w => w.length > 2));
+  if(wordsA.size === 0 || wordsB.size === 0) return 0;
+  let matches = 0;
+  wordsA.forEach(w => { if(wordsB.has(w)) matches++; });
+  return (matches / Math.min(wordsA.size, wordsB.size)) * 100;
+}
+
+async function handleAnalyticsCSV(input) {
+  if(!input.files.length) return;
+  const file = input.files[0];
+  const projectName = document.getElementById('analytics-project').value;
+  const month = document.getElementById('analytics-month').value.trim();
+  const status = document.getElementById('analytics-status');
+
+  if(!projectName) { alert('اختر مشروع الأول'); return; }
+  if(!month) { alert('اكتب الشهر الأول'); return; }
+
+  status.innerHTML = '⏳ جاري قراءة الملف...';
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const text = e.target.result;
+      const rows = parseAnalyticsCSV(text);
+      if(rows.length < 2) { status.innerHTML = '⚠️ الملف فاضي'; return; }
+
+      const headers = rows[0].map(h => h.replace(/^\ufeff/, '').trim().toLowerCase());
+      const data = rows.slice(1);
+
+      // Map column indexes — flexible للسماح بـ Instagram/Facebook variations
+      const idx = {
+        publishTime: headers.findIndex(h => h.includes('publish time') || h.includes('date') && !h.includes('lifetime')),
+        description: headers.findIndex(h => h.includes('description') || h.includes('caption')),
+        postType: headers.findIndex(h => h.includes('post type') || h.includes('type')),
+        permalink: headers.findIndex(h => h.includes('permalink') || h.includes('url')),
+        reach: headers.findIndex(h => h === 'reach'),
+        views: headers.findIndex(h => h === 'views' || h.includes('impressions')),
+        likes: headers.findIndex(h => h === 'likes' || h.includes('reactions')),
+        comments: headers.findIndex(h => h === 'comments'),
+        saves: headers.findIndex(h => h === 'saves' || h === 'saved'),
+        shares: headers.findIndex(h => h === 'shares')
+      };
+
+      // إذا لم يوجد reach، استخدم views
+      const reachField = idx.reach >= 0 ? idx.reach : idx.views;
+      if(reachField < 0) {
+        status.innerHTML = '⚠️ لم أجد عمود Reach أو Views في الملف';
+        return;
+      }
+
+      // استخراج البوستات
+      const posts = data.filter(r => r[idx.publishTime]).map(r => ({
+        publishTime: r[idx.publishTime],
+        description: r[idx.description] || '',
+        postType: r[idx.postType] || '',
+        permalink: r[idx.permalink] || '',
+        reach: r[reachField] || 0,
+        likes: r[idx.likes] || 0,
+        comments: r[idx.comments] || 0,
+        saves: r[idx.saves] || 0,
+        shares: r[idx.shares] || 0
+      }));
+
+      status.innerHTML = `✅ تم قراءة ${posts.length} بوست. جاري المطابقة مع الخطة...`;
+
+      // جيب الخطة من Supabase
+      const projectData = await supabaseQuery('projects', 'GET', null, `?name=eq.${encodeURIComponent(projectName)}&select=id`);
+      if(!projectData || !projectData.length) {
+        status.innerHTML = '⚠️ المشروع غير موجود في Supabase';
+        return;
+      }
+      const projectId = projectData[0].id;
+
+      // طابق كل بوست في التقرير مع صف في الخطة
+      const enrichedPosts = posts.map(post => {
+        const er = calculateEngagementRate(post);
+        const cat = getPerformanceCategory(er);
+        const dateNorm = normalizeDate(post.publishTime);
+        return { ...post, engagementRate: er, category: cat, dateNorm };
+      });
+
+      // ترتيب حسب الـ engagement
+      enrichedPosts.sort((a, b) => b.engagementRate - a.engagementRate);
+
+      // احفظ النتائج في Supabase
+      const performanceData = {
+        platform: 'instagram',
+        report_period: month,
+        uploaded_at: new Date().toISOString(),
+        total_posts: enrichedPosts.length,
+        avg_engagement_rate: parseFloat((enrichedPosts.reduce((s,p) => s+p.engagementRate, 0) / enrichedPosts.length).toFixed(2)),
+        avg_reach: Math.round(enrichedPosts.reduce((s,p) => s+(parseInt(p.reach)||0), 0) / enrichedPosts.length),
+        top_post: {
+          description: enrichedPosts[0].description.substring(0,100),
+          engagement_rate: enrichedPosts[0].engagementRate,
+          post_type: enrichedPosts[0].postType,
+          reach: enrichedPosts[0].reach
+        },
+        posts: enrichedPosts.map(p => ({
+          date: p.publishTime,
+          type: p.postType,
+          reach: parseInt(p.reach) || 0,
+          likes: parseInt(p.likes) || 0,
+          comments: parseInt(p.comments) || 0,
+          saves: parseInt(p.saves) || 0,
+          shares: parseInt(p.shares) || 0,
+          engagement_rate: p.engagementRate,
+          category: p.category.label,
+          permalink: p.permalink,
+          description_preview: p.description.substring(0,150)
+        }))
+      };
+
+      await supabaseQuery('content_memory', 'POST', {
+        project_id: projectId,
+        month: month,
+        content_type: 'performance_report',
+        title: `تقرير أداء ${month} — ${projectName}`,
+        body: `${enrichedPosts.length} بوست — متوسط ER: ${performanceData.avg_engagement_rate}%`,
+        platform: 'instagram',
+        performance: performanceData,
+        notes: `تم رفع التقرير في ${new Date().toLocaleString('ar-EG')}`
+      });
+
+      status.innerHTML = '✅ تم حفظ التقرير في الذاكرة';
+      renderAnalyticsResults(enrichedPosts, performanceData);
+
+    } catch(err) {
+      console.error('Analytics error:', err);
+      status.innerHTML = `⚠️ حدث خطأ: ${err.message}`;
+    }
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+function renderAnalyticsResults(posts, summary) {
+  // Summary card
+  const summaryEl = document.getElementById('analytics-summary');
+  const reels = posts.filter(p => p.postType.toLowerCase().includes('reel'));
+  const images = posts.filter(p => p.postType.toLowerCase().includes('image'));
+  const reelsAvg = reels.length ? (reels.reduce((s,p) => s+p.engagementRate, 0) / reels.length).toFixed(2) : 0;
+  const imagesAvg = images.length ? (images.reduce((s,p) => s+p.engagementRate, 0) / images.length).toFixed(2) : 0;
+
+  summaryEl.innerHTML = `
+    <div style="background:var(--green-light);border-radius:8px;padding:10px 12px;">
+      <div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:4px;">🏆 أعلى بوست أداءً</div>
+      <div style="font-size:12px;color:var(--text);font-weight:600;">${summary.top_post.post_type} — ER ${summary.top_post.engagement_rate}%</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px;line-height:1.5;">${summary.top_post.description}...</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:10px;color:var(--text3);">متوسط ER</div>
+        <div style="font-size:18px;font-weight:700;color:var(--text);margin-top:2px">${summary.avg_engagement_rate}%</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:10px;color:var(--text3);">متوسط Reach</div>
+        <div style="font-size:18px;font-weight:700;color:var(--text);margin-top:2px">${summary.avg_reach.toLocaleString()}</div>
+      </div>
+    </div>
+    <div style="background:var(--blue-light);border-radius:8px;padding:10px 12px;">
+      <div style="font-size:11px;color:var(--blue-text);font-weight:600;margin-bottom:4px;">💡 ملاحظة</div>
+      <div style="font-size:12px;color:var(--text);line-height:1.6">
+        Reels: ${reelsAvg}% ER (${reels.length} بوست)<br>
+        Images: ${imagesAvg}% ER (${images.length} بوست)<br>
+        ${parseFloat(reelsAvg) > parseFloat(imagesAvg) ? '✅ الريلز بتؤدي أفضل — ركز عليها' : '✅ الصور بتؤدي أفضل — ابني عليها'}
+      </div>
+    </div>`;
+
+  // Detailed table
+  const container = document.getElementById('analytics-table-container');
+  container.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:12px;direction:rtl">
+      <thead>
+        <tr style="background:var(--surface2)">
+          <th style="padding:8px;border:0.5px solid var(--border2);font-weight:600;color:var(--text);text-align:right">التاريخ</th>
+          <th style="padding:8px;border:0.5px solid var(--border2);font-weight:600;color:var(--text);text-align:right">النوع</th>
+          <th style="padding:8px;border:0.5px solid var(--border2);font-weight:600;color:var(--text);text-align:right">الكابشن</th>
+          <th style="padding:8px;border:0.5px solid var(--border2);font-weight:600;color:var(--text);text-align:center">Reach</th>
+          <th style="padding:8px;border:0.5px solid var(--border2);font-weight:600;color:var(--text);text-align:center">Likes</th>
+          <th style="padding:8px;border:0.5px solid var(--border2);font-weight:600;color:var(--text);text-align:center">Saves</th>
+          <th style="padding:8px;border:0.5px solid var(--border2);font-weight:600;color:var(--text);text-align:center">Comments</th>
+          <th style="padding:8px;border:0.5px solid var(--border2);font-weight:600;color:var(--text);text-align:center">ER</th>
+          <th style="padding:8px;border:0.5px solid var(--border2);font-weight:600;color:var(--text);text-align:center">التقييم</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${posts.map((p,i) => `
+          <tr style="background:${i%2===0?'var(--surface)':'var(--surface2)'}">
+            <td style="padding:8px;border:0.5px solid var(--border2);color:var(--text);white-space:nowrap">${p.publishTime}</td>
+            <td style="padding:8px;border:0.5px solid var(--border2);color:var(--text);white-space:nowrap">${p.postType}</td>
+            <td style="padding:8px;border:0.5px solid var(--border2);color:var(--text);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.description.substring(0,80)}...</td>
+            <td style="padding:8px;border:0.5px solid var(--border2);color:var(--text);text-align:center">${(parseInt(p.reach)||0).toLocaleString()}</td>
+            <td style="padding:8px;border:0.5px solid var(--border2);color:var(--text);text-align:center">${p.likes}</td>
+            <td style="padding:8px;border:0.5px solid var(--border2);color:var(--text);text-align:center">${p.saves}</td>
+            <td style="padding:8px;border:0.5px solid var(--border2);color:var(--text);text-align:center">${p.comments}</td>
+            <td style="padding:8px;border:0.5px solid var(--border2);font-weight:700;text-align:center;color:${p.category.color}">${p.engagementRate}%</td>
+            <td style="padding:8px;border:0.5px solid var(--border2);text-align:center;background:${p.category.bg};color:${p.category.color};font-weight:600;white-space:nowrap">${p.category.label}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+
+  document.getElementById('analytics-results').style.display = 'block';
+}
+
+// تحديث dropdown المشاريع في صفحة التحليل
+function refreshAnalyticsProjects() {
+  const sel = document.getElementById('analytics-project');
+  if(!sel) return;
+  const projects = getProjects();
+  sel.innerHTML = '<option value="">اختر مشروع</option>' + projects.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+}
+
+// نادي عليها لما الصفحة تفتح
+const _origShowScreen = window.showScreen;
+if(typeof _origShowScreen === 'function') {
+  window.showScreen = function(name) {
+    _origShowScreen(name);
+    if(name === 'analytics') refreshAnalyticsProjects();
+  };
 }
 </script>
 </body>
