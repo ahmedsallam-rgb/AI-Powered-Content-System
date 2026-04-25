@@ -1868,7 +1868,17 @@ async function sendMonthlyChat() {
   const projectName = document.getElementById('monthly-project').value;
   const projectData = getProjects().find(p => p.name === projectName) || {};
   const currentTable = window.monthlyTableData;
-  const currentPlan = currentTable ? currentTable.rows.map((r,i) => `${i+1}. ${r[0]||''} | ${r[2]||''} | ${r[3]||''}`).join('\n') : 'لا توجد خطة';
+
+  if(!currentTable || !currentTable.rows || currentTable.rows.length === 0) {
+    addMonthlyChatMsg('ai', '⚠️ مفيش جدول للتعديل عليه. ولّد خطة الأول.');
+    return;
+  }
+
+  const apiKey = localStorage.getItem('sahab_api_key');
+  if(!apiKey) {
+    addMonthlyChatMsg('ai', '⚠️ مفيش API key. ضيفه في الإعدادات.');
+    return;
+  }
 
   addMonthlyChatMsg('user', text);
   monthlyChatHistory.push({ role: 'user', content: text });
@@ -1881,42 +1891,88 @@ async function sendMonthlyChat() {
 
   isLoading = true;
   try {
-    const request = `أنت مساعد تعديل محتوى للمشروع: ${projectName}
-اللهجة: ${projectData.dialect || ''}
+    // ابني الجدول الحالي كنص
+    const headers = currentTable.headers.join(' | ');
+    const sep = currentTable.headers.map(()=>'---').join(' | ');
+    const rowsText = currentTable.rows.map(r => r.join(' | ')).join('\n');
+    const fullTable = `${headers}\n${sep}\n${rowsText}`;
 
-الخطة الحالية:
-${currentPlan}
+    const systemPrompt = `أنت محرر محتوى للمشروع: ${projectName}.
+اللهجة: ${projectData.dialect || 'خليجي'}.
+الجمهور: ${projectData.audience || ''}.
+أسلوب الكتابة: ${projectData.voice || ''}.
 
-طلب التعديل: ${text}
+مهمتك: تعديل الجدول التالي حسب طلب المستخدم.
 
-نفّذ التعديل وأعطني الخطة المعدّلة كاملة بنفس الجدول.
-الأعمدة: موعد النشر | فكرة التصميم | نص التصميم | الكابشن | الهاشتاجات | دعوة للتصرف`;
+قواعد صارمة:
+1. ارجع **الجدول كاملاً** بنفس الأعمدة والترتيب.
+2. لا تضف أي نص قبل الجدول أو بعده. لا مقدمات. لا تعليقات.
+3. ابدأ مباشرة بصف العناوين.
+4. استخدم نفس الفاصل ( | ).
+5. حافظ على نفس عدد الصفوف ما لم يطلب المستخدم العكس.`;
 
-    const response = await callAgent(request, { project: projectName, month: currentTable?.month || '' });
+    const userMessage = `الجدول الحالي:
+
+${fullTable}
+
+طلب التعديل: ${text}`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 8000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userMessage }]
+      })
+    });
 
     document.getElementById('monthly-loading')?.remove();
 
-    if(response.includes('جاري التوليد')) {
-      addMonthlyChatMsg('ai', 'جاري تنفيذ التعديل... تحقق من Google Sheets خلال دقيقتين ✅');
-    } else {
-      addMonthlyChatMsg('ai', response);
-      monthlyChatHistory.push({ role: 'assistant', content: response });
-      saveEditToMemory(projectName, currentTable?.month || '', text, response);
-
-      const lines = response.split('\n').filter(l => l.trim() && !l.includes('---'));
-      const tableLines = lines.filter(l => l.includes('|') && l.split('|').length >= 4);
-      if(tableLines.length > 2 && currentTable) {
-        const rows = tableLines.slice(1).map(l => l.split('|').map(c=>c.trim()).filter(Boolean)).filter(r=>r.length>=4);
-        if(rows.length > 0) {
-          currentTable.rows = rows;
-          window.monthlyTableData = currentTable;
-          const tbody = document.getElementById('monthly-output').querySelector('tbody');
-          if(tbody) tbody.innerHTML = rows.map((row,i)=>`<tr style="background:${i%2===0?'var(--surface)':'var(--surface2)'}">
-            ${row.map((cell,j)=>`<td contenteditable="true" data-row="${i}" data-col="${j}" oninput="updateCell(${i},${j},this.innerText)" style="padding:8px 10px;text-align:right;border:0.5px solid var(--border2);color:var(--text);line-height:1.5;min-width:120px;outline:none" onfocus="this.style.background='var(--accent-light, #fff4d6)'" onblur="this.style.background=''">${cell}</td>`).join('')}</tr>`).join('');
-        }
-      }
+    if(!response.ok) {
+      const errText = await response.text();
+      console.error('API error:', errText);
+      addMonthlyChatMsg('ai', '⚠️ حدث خطأ في الاتصال بالـ API. تأكد من المفتاح.');
+      isLoading = false;
+      return;
     }
+
+    const data = await response.json();
+    const reply = data.content?.[0]?.text || '';
+
+    // parse الجدول الجديد
+    const lines = reply.split('\n').filter(l => l.trim() && !l.includes('---'));
+    const tableLines = lines.filter(l => l.includes('|') && l.split('|').length >= 4);
+    const newRows = tableLines.slice(1).map(l => l.split('|').map(c=>c.trim()).filter(Boolean)).filter(r=>r.length>=4);
+
+    if(newRows.length === 0) {
+      addMonthlyChatMsg('ai', `⚠️ الرد جا بدون جدول واضح:\n\n${reply.substring(0,300)}`);
+      isLoading = false;
+      return;
+    }
+
+    // حدّث الجدول في الذاكرة
+    currentTable.rows = newRows;
+    window.monthlyTableData = currentTable;
+
+    // أعد رسم الـ tbody
+    const tbody = document.getElementById('monthly-output').querySelector('tbody');
+    if(tbody) {
+      tbody.innerHTML = newRows.map((row,i)=>`<tr style="background:${i%2===0?'var(--surface)':'var(--surface2)'}">
+        ${row.map((cell,j)=>`<td contenteditable="true" data-row="${i}" data-col="${j}" oninput="updateCell(${i},${j},this.innerText)" style="padding:8px 10px;text-align:right;border:0.5px solid var(--border2);color:var(--text);line-height:1.5;min-width:120px;outline:none" onfocus="this.style.background='var(--accent-light, #fff4d6)'" onblur="this.style.background=''">${cell}</td>`).join('')}</tr>`).join('');
+    }
+
+    addMonthlyChatMsg('ai', `✅ تم التعديل (${newRows.length} بوست). شوف الجدول فوق.`);
+    monthlyChatHistory.push({ role: 'assistant', content: 'تم تعديل الجدول' });
+
   } catch(e) {
+    console.error('Chat error:', e);
     document.getElementById('monthly-loading')?.remove();
     addMonthlyChatMsg('ai', '⚠️ حدث خطأ، حاول تاني.');
   }
