@@ -1073,13 +1073,16 @@
         <div class="page-title">📅 المحتوى الدوري الشهري</div>
         <div class="page-sub">ولّد خطة محتوى شهر كامل دفعة واحدة</div>
       </div>
+
+      <div id="monthly-insights-banner" style="display:none;margin-bottom:1rem"></div>
+
       <div class="grid-2">
         <div class="card">
           <div class="card-title">⚙️ إعدادات الخطة الشهرية</div>
           <div style="display:flex;flex-direction:column;gap:12px;">
             <div>
               <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">المشروع</div>
-              <select id="monthly-project" style="width:100%;padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:13px;outline:none;background:var(--surface2);color:var(--text);direction:rtl"></select>
+              <select id="monthly-project" onchange="loadInsightsForMonthlyPage()" style="width:100%;padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:13px;outline:none;background:var(--surface2);color:var(--text);direction:rtl"></select>
             </div>
             <div>
               <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">الشهر</div>
@@ -1437,6 +1440,8 @@ function showScreen(name) {
   const map = { dashboard: 0, projects: 1, calendar: 2, sop: 3, monthly: 4, 'ai-writer': 5, analytics: 6 };
   const items = document.querySelectorAll('.nav-item');
   if(map[name] !== undefined) items[map[name]].classList.add('active');
+  if(name === 'monthly') loadInsightsForMonthlyPage();
+  if(name === 'analytics') refreshAnalyticsProjects();
 }
 
 function openProject(id) {
@@ -2205,6 +2210,9 @@ async function handleAnalyticsCSV(input) {
       status.innerHTML = '✅ تم حفظ التقرير في الذاكرة';
       renderAnalyticsResults(enrichedPosts, performanceData);
 
+      // استدعاء تلقائي لاستخراج الـ insights
+      await extractInsightsAfterReport(projectName, month, performanceData);
+
     } catch(err) {
       console.error('Analytics error:', err);
       status.innerHTML = `⚠️ حدث خطأ: ${err.message}`;
@@ -2282,22 +2290,164 @@ function renderAnalyticsResults(posts, summary) {
   document.getElementById('analytics-results').style.display = 'block';
 }
 
-// تحديث dropdown المشاريع في صفحة التحليل
-function refreshAnalyticsProjects() {
+// === Insight Extractor (Phase 1.ب) ===
+
+async function extractInsightsAfterReport(projectName, month, performanceData) {
+  const status = document.getElementById('analytics-status');
+  status.innerHTML = '🧠 جاري استخراج الـ insights من Claude...';
+
+  try {
+    const apiKey = localStorage.getItem('sahab_api_key');
+    if(!apiKey) { status.innerHTML += ' (تخطيت — مفيش API key)'; return; }
+
+    // جيب الخطة الأصلية للشهر ده عشان Claude يقارن
+    const projectData = await supabaseQuery('projects', 'GET', null, `?name=eq.${encodeURIComponent(projectName)}&select=id`);
+    if(!projectData?.length) return;
+    const projectId = projectData[0].id;
+
+    const plans = await supabaseQuery('content_memory', 'GET', null,
+      `?project_id=eq.${projectId}&content_type=eq.monthly_plan&order=created_at.desc&limit=1`);
+    const planContext = plans?.length ? `الخطة الأصلية:\n${plans[0].body?.substring(0,1500) || ''}` : 'لا توجد خطة محفوظة';
+
+    // ابني الـ prompt
+    const postsForAI = performanceData.posts.slice(0, 20).map((p, i) =>
+      `${i+1}. [${p.type}] ${p.date} — Reach:${p.reach}, ER:${p.engagement_rate}%, Saves:${p.saves}\n   "${p.description_preview}"`
+    ).join('\n');
+
+    const systemPrompt = `أنت محلل أداء محتوى سوشيال ميديا خبير. مهمتك: تستخرج insights عملية ومحددة من بيانات أداء البوستات لشهر كامل.
+
+قواعد الـ insights:
+1. لازم تكون **عملية** (قابلة للتنفيذ في الشهر القادم)، مش عامة.
+2. لازم تكون **مدعومة بأرقام** من البيانات اللي قدامك.
+3. لازم تشمل: نوع المحتوى الناجح، نوع المحتوى الفاشل، توقيت أفضل، طول كابشن مثالي، أنماط متكررة.
+4. ركز على ٥-٧ insights قوية، مش عشرة عامة.
+5. لو الداتا قليلة جداً، قل ده ولا تخترع insights.
+
+اكتب الـ insights في نقاط مختصرة (سطرين كحد أقصى لكل واحدة)، باللغة العربية، بدون مقدمات.`;
+
+    const userMessage = `المشروع: ${projectName}
+الشهر: ${month}
+
+ملخص الأداء:
+- متوسط ER: ${performanceData.avg_engagement_rate}%
+- متوسط Reach: ${performanceData.avg_reach}
+- إجمالي البوستات: ${performanceData.total_posts}
+
+تفاصيل البوستات (مرتبة من الأعلى للأقل أداءً):
+${postsForAI}
+
+${planContext}
+
+استخرج الـ insights.`;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 2000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userMessage }]
+      })
+    });
+
+    if(!res.ok) {
+      console.error('Insights API error:', await res.text());
+      status.innerHTML = '✅ التقرير محفوظ، لكن فشل استخراج الـ insights';
+      return;
+    }
+
+    const data = await res.json();
+    const insightsText = data.content?.[0]?.text || '';
+
+    // احفظ الـ insights في Supabase
+    await supabaseQuery('content_memory', 'POST', {
+      project_id: projectId,
+      month: month,
+      content_type: 'insights',
+      title: `Insights ${month} — ${projectName}`,
+      body: insightsText,
+      insight: insightsText,
+      platform: 'instagram',
+      notes: `تم الاستخراج بناءً على تقرير ${performanceData.total_posts} بوست`
+    });
+
+    status.innerHTML = '✅ تم استخراج الـ insights وحفظهم في الذاكرة';
+
+    // اعرض الـ insights في صفحة الأداء كمان
+    showInsightsInAnalytics(insightsText, projectName, month);
+
+  } catch(err) {
+    console.error('Insights extraction error:', err);
+    status.innerHTML = '✅ التقرير محفوظ، لكن فشل استخراج الـ insights';
+  }
+}
+
+function showInsightsInAnalytics(text, projectName, month) {
+  let container = document.getElementById('insights-display-card');
+  if(!container) {
+    const resultsDiv = document.getElementById('analytics-results');
+    const card = document.createElement('div');
+    card.id = 'insights-display-card';
+    card.className = 'card';
+    card.style.cssText = 'margin-top:1rem;background:linear-gradient(135deg,var(--blue-light) 0%,var(--green-light) 100%);';
+    resultsDiv.appendChild(card);
+    container = card;
+  }
+  container.innerHTML = `
+    <div class="card-title">🧠 Insights مستخرجة بـ AI — ${projectName} (${month})</div>
+    <div style="white-space:pre-wrap;font-size:13px;color:var(--text);line-height:1.8;direction:rtl;padding:8px 0">${text.replace(/\n/g,'<br>')}</div>
+    <div style="font-size:11px;color:var(--text3);margin-top:8px;text-align:center">💡 الـ insights دي هتظهر تلقائياً في صفحة المحتوى الشهري وقت توليد الشهر القادم</div>`;
+}
+
+// عرض الـ insights في صفحة المحتوى الشهري
+async function loadInsightsForMonthlyPage() {
+  const banner = document.getElementById('monthly-insights-banner');
+  if(!banner) return;
+
+  const projectName = document.getElementById('monthly-project')?.value;
+  if(!projectName) { banner.style.display = 'none'; return; }
+
+  try {
+    const projectData = await supabaseQuery('projects', 'GET', null, `?name=eq.${encodeURIComponent(projectName)}&select=id`);
+    if(!projectData?.length) { banner.style.display = 'none'; return; }
+
+    const insights = await supabaseQuery('content_memory', 'GET', null,
+      `?project_id=eq.${projectData[0].id}&content_type=eq.insights&order=created_at.desc&limit=1`);
+
+    if(!insights?.length || !insights[0].insight) { banner.style.display = 'none'; return; }
+
+    const ins = insights[0];
+    const dateStr = new Date(ins.created_at).toLocaleDateString('ar-EG');
+
+    banner.innerHTML = `
+      <div class="card" style="background:linear-gradient(135deg,#fef3c7 0%,#dbeafe 100%);border:1px solid #fcd34d;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+          <div style="font-size:13px;font-weight:700;color:var(--text)">🧠 تعلّمات من شهر ${ins.month} — استخدمها وقت التوليد</div>
+          <button onclick="document.getElementById('monthly-insights-banner').style.display='none'" style="background:transparent;border:none;cursor:pointer;color:var(--text2);font-size:14px">✕</button>
+        </div>
+        <div style="white-space:pre-wrap;font-size:12px;color:var(--text);line-height:1.7;direction:rtl">${ins.insight.replace(/\n/g,'<br>')}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:8px">آخر تحديث: ${dateStr}</div>
+      </div>`;
+    banner.style.display = 'block';
+  } catch(e) {
+    console.error('Load insights error:', e);
+    banner.style.display = 'none';
+  }
+}
+
+
   const sel = document.getElementById('analytics-project');
   if(!sel) return;
   const projects = getProjects();
   sel.innerHTML = '<option value="">اختر مشروع</option>' + projects.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
 }
 
-// نادي عليها لما الصفحة تفتح
-const _origShowScreen = window.showScreen;
-if(typeof _origShowScreen === 'function') {
-  window.showScreen = function(name) {
-    _origShowScreen(name);
-    if(name === 'analytics') refreshAnalyticsProjects();
-  };
-}
 </script>
 </body>
 </html>
