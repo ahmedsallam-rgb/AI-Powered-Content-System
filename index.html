@@ -1550,9 +1550,10 @@ async function handleEventsPDF(input) {
   status.innerHTML = '⏳ جاري قراءة الـ PDF...';
 
   try {
-    // استخرج النص من الـ PDF
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+    // جرب استخراج النص الأول
     let fullText = '';
     for(let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
@@ -1560,17 +1561,24 @@ async function handleEventsPDF(input) {
       fullText += textContent.items.map(item => item.str).join(' ') + '\n';
     }
 
-    if(fullText.length < 50) { status.textContent = '⚠️ مفيش نص في الـ PDF (ممكن يكون صور)'; return; }
+    let events;
+    if(fullText.trim().length >= 200) {
+      // PDF نصي → استخدم الطريقة العادية
+      status.innerHTML = `✅ تم قراءة ${pdf.numPages} صفحة (${fullText.length} حرف). جاري استخراج المناسبات...`;
+      events = await extractEventsWithClaude(fullText, apiKey);
+    } else {
+      // PDF صور → استخدم Vision API
+      status.innerHTML = `🖼️ الـ PDF صور — جاري تحويل ${pdf.numPages} صفحة لصور...`;
+      const images = await convertPdfPagesToImages(pdf, status);
+      if(!images.length) { status.textContent = '⚠️ فشل تحويل الصفحات لصور'; return; }
+      status.innerHTML = `🤖 جاري قراءة ${images.length} صورة بـ Claude Vision (قد يستغرق دقيقة)...`;
+      events = await extractEventsFromImages(images, apiKey);
+    }
 
-    status.innerHTML = `✅ تم قراءة ${pdf.numPages} صفحة (${fullText.length} حرف). جاري استخراج المناسبات...`;
-
-    // ابعت لـ Claude لاستخراج المناسبات
-    const events = await extractEventsWithClaude(fullText, apiKey);
     if(!events || events.length === 0) { status.textContent = '⚠️ لم يتمكن Claude من استخراج مناسبات من الملف'; return; }
 
     status.innerHTML = `✅ تم استخراج ${events.length} مناسبة. جاري الحفظ...`;
 
-    // احفظ في Supabase
     await supabaseQuery('projects', 'PATCH', {
       annual_events: events,
       events_source: file.name
@@ -1582,6 +1590,98 @@ async function handleEventsPDF(input) {
   } catch(err) {
     console.error('PDF processing error:', err);
     status.innerHTML = `⚠️ حدث خطأ: ${err.message}`;
+  }
+}
+
+async function convertPdfPagesToImages(pdf, statusEl) {
+  const images = [];
+  const maxPages = Math.min(pdf.numPages, 50); // حد أقصى 50 صفحة
+  for(let i = 1; i <= maxPages; i++) {
+    if(statusEl) statusEl.innerHTML = `🖼️ جاري تحويل صفحة ${i} من ${maxPages}...`;
+    const page = await pdf.getPage(i);
+    // scale معتدل (1.5) للحصول على جودة كافية بدون حجم ضخم
+    const viewport = page.getViewport({ scale: 1.5 });
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const ctx = canvas.getContext('2d');
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    // JPEG بجودة 0.8 لتقليل الحجم
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+    images.push(dataUrl.split(',')[1]); // base64 بدون prefix
+  }
+  return images;
+}
+
+async function extractEventsFromImages(images, apiKey) {
+  const systemPrompt = `أنت مستخرج بيانات. مهمتك تقرأ صور صفحات PDF (تقويم سنوي) وتستخرج كل المناسبات المذكورة.
+
+أرجع JSON array فقط بهذا الشكل (بدون أي نص قبل أو بعد):
+
+[
+  {
+    "name": "اسم المناسبة",
+    "month": رقم الشهر (1-12),
+    "day": رقم اليوم (1-31),
+    "year_recurring": true/false,
+    "type": "ديني/وطني/تجاري/موسمي/توعوي",
+    "context": "وصف مختصر بسطر واحد عن المناسبة وأهميتها"
+  }
+]
+
+قواعد صارمة:
+1. استخرج كل المناسبات الظاهرة في كل الصفحات.
+2. اربط كل مناسبة بالشهر اللي ظهرت فيه (اسم الشهر مكتوب فوق كل صفحة تقويم).
+3. لا تخترع مناسبات. خد بس اللي مكتوب.
+4. لا تكتب أي شرح. JSON فقط، بدون \`\`\`json أو غيره.
+5. لو في مناسبة ظاهرة في عدة شهور، كررها لكل شهر.
+6. السياق (context) لازم يساعد كاتب محتوى يفهم نوع البوست المناسب.`;
+
+  // ابعت كل الصور دفعة واحدة
+  const content = [];
+  images.forEach((img, idx) => {
+    content.push({
+      type: 'image',
+      source: { type: 'base64', media_type: 'image/jpeg', data: img }
+    });
+  });
+  content.push({ type: 'text', text: 'استخرج كل المناسبات من كل صفحات التقويم دي. أرجع JSON array فقط.' });
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-5',
+      max_tokens: 16000,
+      system: systemPrompt,
+      messages: [{ role: 'user', content }]
+    })
+  });
+
+  if(!res.ok) {
+    const errText = await res.text();
+    console.error('Vision API error:', errText);
+    throw new Error('فشل الاتصال بـ Claude Vision API');
+  }
+  const data = await res.json();
+  let text = data.content?.[0]?.text || '';
+
+  text = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+  const start = text.indexOf('[');
+  const end = text.lastIndexOf(']');
+  if(start === -1 || end === -1) { console.error('No JSON array found:', text.substring(0,200)); return []; }
+
+  try {
+    const events = JSON.parse(text.substring(start, end + 1));
+    return events.filter(e => e.name && e.month);
+  } catch(e) {
+    console.error('JSON parse error:', e, text.substring(0,200));
+    return [];
   }
 }
 
