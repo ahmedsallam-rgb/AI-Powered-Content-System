@@ -530,6 +530,7 @@
 
   .badge-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
 
@@ -772,6 +773,31 @@
           </div>
           <button class="btn btn-primary" style="width:100%;padding:12px;font-size:14px" onclick="saveNewProject()">✅ حفظ المشروع</button>
         </div>
+      </div>
+    </div>
+
+    <div id="events-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:999;align-items:center;justify-content:center;">
+      <div style="background:var(--surface);border-radius:12px;width:92%;max-width:680px;max-height:88vh;overflow-y:auto;padding:1.5rem;direction:rtl">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+          <div style="font-size:16px;font-weight:700">🗓️ المناسبات السنوية — <span id="events-modal-project-name"></span></div>
+          <button onclick="closeEventsModal()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text3)">✕</button>
+        </div>
+
+        <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:12px">
+          <div style="font-size:12px;color:var(--text2);margin-bottom:8px;line-height:1.6">
+            ارفع PDF فيه المناسبات والأحداث السنوية المهمة (ثقافية، دينية، عروض موسمية للمشروع، إلخ)<br>
+            Claude هيستخرج المناسبات تلقائياً ويربطها بكل شهر.
+          </div>
+          <div class="upload-zone" onclick="document.getElementById('events-pdf').click()" style="cursor:pointer">
+            <input type="file" id="events-pdf" style="display:none" accept=".pdf" onchange="handleEventsPDF(this)">
+            <div class="upload-icon">📄</div>
+            <div class="upload-text">ارفع ملف PDF</div>
+            <div class="upload-sub">سيتم استخراج المناسبات تلقائياً</div>
+          </div>
+          <div id="events-upload-status" style="font-size:12px;color:var(--text2);margin-top:8px;text-align:center"></div>
+        </div>
+
+        <div id="events-list" style="display:flex;flex-direction:column;gap:6px"></div>
       </div>
     </div>
 
@@ -1083,6 +1109,7 @@
         <div class="page-sub">ولّد خطة محتوى شهر كامل دفعة واحدة</div>
       </div>
 
+      <div id="monthly-events-banner" style="display:none;margin-bottom:1rem"></div>
       <div id="monthly-insights-banner" style="display:none;margin-bottom:1rem"></div>
 
       <div class="grid-2">
@@ -1091,7 +1118,7 @@
           <div style="display:flex;flex-direction:column;gap:12px;">
             <div>
               <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">المشروع</div>
-              <select id="monthly-project" onchange="loadInsightsForMonthlyPage()" style="width:100%;padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:13px;outline:none;background:var(--surface2);color:var(--text);direction:rtl"></select>
+              <select id="monthly-project" onchange="loadInsightsForMonthlyPage();loadUpcomingEventsBanner()" style="width:100%;padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:13px;outline:none;background:var(--surface2);color:var(--text);direction:rtl"></select>
             </div>
             <div>
               <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">الشهر</div>
@@ -1423,6 +1450,202 @@ function onSopProjectChange() {
   document.getElementById('sop-title').textContent = `${p.emoji || '📁'} ${p.name} — SOP ${currentMonth}`;
 }
 
+// === Annual Events System ===
+
+if(typeof pdfjsLib !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+let _currentEventsProjectId = null;
+
+async function openEventsModal(projectId) {
+  _currentEventsProjectId = projectId;
+  const projects = getProjects();
+  const project = projects.find(p => p.id === projectId);
+  if(!project) return;
+
+  document.getElementById('events-modal-project-name').textContent = project.name;
+  document.getElementById('events-modal').style.display = 'flex';
+  document.getElementById('events-upload-status').textContent = '';
+  document.getElementById('events-pdf').value = '';
+
+  // جيب المناسبات الحالية من Supabase
+  await loadProjectEvents(projectId);
+}
+
+function closeEventsModal() {
+  document.getElementById('events-modal').style.display = 'none';
+  _currentEventsProjectId = null;
+}
+
+async function loadProjectEvents(projectId) {
+  const list = document.getElementById('events-list');
+  list.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:12px;padding:1rem">جاري التحميل...</div>';
+  try {
+    const data = await supabaseQuery('projects', 'GET', null, `?id=eq.${projectId}&select=annual_events,events_source`);
+    if(!data || !data.length) { list.innerHTML = '<div style="color:var(--text3);font-size:12px;text-align:center;padding:1rem">لم يتم العثور على المشروع</div>'; return; }
+
+    const events = data[0].annual_events || [];
+    const source = data[0].events_source;
+    renderEventsList(events, source);
+  } catch(e) {
+    console.error('Load events error:', e);
+    list.innerHTML = '<div style="color:var(--coral);font-size:12px;text-align:center;padding:1rem">حدث خطأ في التحميل</div>';
+  }
+}
+
+function renderEventsList(events, source) {
+  const list = document.getElementById('events-list');
+  if(!events || events.length === 0) {
+    list.innerHTML = '<div style="color:var(--text3);font-size:12px;text-align:center;padding:1rem;background:var(--surface2);border-radius:8px">لا توجد مناسبات بعد. ارفع PDF لاستخراجها تلقائياً.</div>';
+    return;
+  }
+
+  // ترتيب حسب الشهر واليوم
+  const sorted = [...events].sort((a, b) => (a.month - b.month) || (a.day - b.day));
+  const monthNames = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+
+  let html = '';
+  if(source) {
+    html += `<div style="font-size:11px;color:var(--text3);margin-bottom:6px">📄 المصدر: ${source} (${events.length} مناسبة)</div>`;
+  }
+
+  // جمّعهم بالشهر
+  const byMonth = {};
+  sorted.forEach(e => {
+    const m = parseInt(e.month) || 0;
+    if(!byMonth[m]) byMonth[m] = [];
+    byMonth[m].push(e);
+  });
+
+  Object.keys(byMonth).sort((a,b) => a-b).forEach(m => {
+    const monthName = monthNames[parseInt(m)-1] || `شهر ${m}`;
+    html += `<div style="background:var(--surface2);border-radius:8px;padding:8px 10px;margin-bottom:4px">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">${monthName}</div>
+      ${byMonth[m].map(e => `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:4px 0;border-bottom:0.5px solid var(--border2);gap:8px">
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:600;color:var(--text)">${e.day} ${monthName} — ${e.name}</div>
+            ${e.context ? `<div style="font-size:11px;color:var(--text2);margin-top:2px">${e.context}</div>` : ''}
+            <div style="font-size:10px;color:var(--text3);margin-top:2px">${e.type || 'عام'} ${e.year_recurring !== false ? '· سنوي' : ''}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+  });
+
+  list.innerHTML = html;
+}
+
+async function handleEventsPDF(input) {
+  if(!input.files.length || !_currentEventsProjectId) return;
+  const file = input.files[0];
+  const status = document.getElementById('events-upload-status');
+
+  if(!file.name.toLowerCase().endsWith('.pdf')) { status.textContent = '⚠️ الملف لازم يكون PDF'; return; }
+
+  const apiKey = localStorage.getItem('sahab_api_key');
+  if(!apiKey) { status.textContent = '⚠️ مفيش API key — ضيفه في الإعدادات'; return; }
+
+  status.innerHTML = '⏳ جاري قراءة الـ PDF...';
+
+  try {
+    // استخرج النص من الـ PDF
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let fullText = '';
+    for(let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      fullText += textContent.items.map(item => item.str).join(' ') + '\n';
+    }
+
+    if(fullText.length < 50) { status.textContent = '⚠️ مفيش نص في الـ PDF (ممكن يكون صور)'; return; }
+
+    status.innerHTML = `✅ تم قراءة ${pdf.numPages} صفحة (${fullText.length} حرف). جاري استخراج المناسبات...`;
+
+    // ابعت لـ Claude لاستخراج المناسبات
+    const events = await extractEventsWithClaude(fullText, apiKey);
+    if(!events || events.length === 0) { status.textContent = '⚠️ لم يتمكن Claude من استخراج مناسبات من الملف'; return; }
+
+    status.innerHTML = `✅ تم استخراج ${events.length} مناسبة. جاري الحفظ...`;
+
+    // احفظ في Supabase
+    await supabaseQuery('projects', 'PATCH', {
+      annual_events: events,
+      events_source: file.name
+    }, `?id=eq.${_currentEventsProjectId}`);
+
+    status.innerHTML = `🎉 تم حفظ ${events.length} مناسبة في المشروع`;
+    renderEventsList(events, file.name);
+
+  } catch(err) {
+    console.error('PDF processing error:', err);
+    status.innerHTML = `⚠️ حدث خطأ: ${err.message}`;
+  }
+}
+
+async function extractEventsWithClaude(pdfText, apiKey) {
+  const systemPrompt = `أنت مستخرج بيانات. مهمتك تقرأ نص PDF وتستخرج كل المناسبات والأحداث السنوية المذكورة فيه.
+
+أرجع JSON array فقط بهذا الشكل (بدون أي نص قبل أو بعد):
+
+[
+  {
+    "name": "اسم المناسبة",
+    "month": رقم الشهر (1-12),
+    "day": رقم اليوم (1-31),
+    "year_recurring": true/false (هل تتكرر كل سنة؟),
+    "type": "نوع المناسبة (ديني/وطني/تجاري/موسمي)",
+    "context": "وصف مختصر بسطر واحد عن المناسبة وأهميتها للجمهور"
+  }
+]
+
+قواعد صارمة:
+1. استخرج كل المناسبات حتى لو متشابهة.
+2. للمناسبات الإسلامية المتغيرة (رمضان، عيد الفطر، الأضحى) - استخدم التواريخ الميلادية المتوقعة لسنة 2026 إذا لم تكن موجودة.
+3. لا تخترع مناسبات غير موجودة في النص.
+4. لا تكتب أي شرح. JSON فقط.
+5. لو الشهر غير محدد لمناسبة، اكتب 0.
+6. السياق (context) لازم يساعد الكاتب يفهم الـ tone المناسب.`;
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-5',
+      max_tokens: 8000,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: `استخرج كل المناسبات من هذا النص:\n\n${pdfText.substring(0, 50000)}` }]
+    })
+  });
+
+  if(!res.ok) throw new Error('فشل الاتصال بـ Claude API');
+  const data = await res.json();
+  let text = data.content?.[0]?.text || '';
+
+  // نظّف الرد - لو فيه ```json أو حاجة كده
+  text = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+
+  // ابحث عن أول [ وآخر ]
+  const start = text.indexOf('[');
+  const end = text.lastIndexOf(']');
+  if(start === -1 || end === -1) { console.error('No JSON array found:', text.substring(0,200)); return []; }
+
+  try {
+    const events = JSON.parse(text.substring(start, end + 1));
+    return events.filter(e => e.name && e.month);
+  } catch(e) {
+    console.error('JSON parse error:', e, text.substring(0,200));
+    return [];
+  }
+}
+
 async function manualRefreshProjects() {
   const btn = document.getElementById('projects-refresh-btn');
   if(btn) { btn.textContent = '⏳ جاري التحديث...'; btn.disabled = true; }
@@ -1521,6 +1744,7 @@ function renderProjects() {
   grid.innerHTML = projects.map(p => `
     <div class="project-card" onclick="openProjectById('${p.id}')">
       <div class="project-status ${p.status==='active'?'status-active':'status-pending'}"></div>
+      <button onclick="event.stopPropagation();openEventsModal('${p.id}')" style="position:absolute;top:8px;left:56px;background:none;border:none;cursor:pointer;font-size:13px;color:var(--text3);line-height:1" title="مناسبات سنوية">🗓️</button>
       <button onclick="event.stopPropagation();editProject('${p.id}')" style="position:absolute;top:8px;left:32px;background:none;border:none;cursor:pointer;font-size:13px;color:var(--text3);line-height:1" title="تعديل">✏️</button>
       <button onclick="event.stopPropagation();deleteProject('${p.id}')" style="position:absolute;top:8px;left:8px;background:none;border:none;cursor:pointer;font-size:13px;color:var(--text3);line-height:1" title="حذف">✕</button>
       <div class="project-avatar" style="background:${p.bg}">${p.emoji}</div>
@@ -1663,7 +1887,7 @@ function showScreen(name) {
   const map = { dashboard: 0, projects: 1, calendar: 2, sop: 3, monthly: 4, 'ai-writer': 5, analytics: 6 };
   const items = document.querySelectorAll('.nav-item');
   if(map[name] !== undefined) items[map[name]].classList.add('active');
-  if(name === 'monthly') loadInsightsForMonthlyPage();
+  if(name === 'monthly') { loadInsightsForMonthlyPage(); loadUpcomingEventsBanner(); }
   if(name === 'analytics') refreshAnalyticsProjects();
   if(name === 'projects') loadProjectsFromSupabase();
   if(name === 'sop') refreshSopProjectsDropdown();
@@ -2632,6 +2856,59 @@ function showInsightsInAnalytics(text, projectName, month) {
 }
 
 // عرض الـ insights في صفحة المحتوى الشهري
+async function loadUpcomingEventsBanner() {
+  const banner = document.getElementById('monthly-events-banner');
+  if(!banner) return;
+
+  const projectName = document.getElementById('monthly-project')?.value;
+  if(!projectName) { banner.style.display = 'none'; return; }
+
+  try {
+    const projects = getProjects();
+    const project = projects.find(p => p.name === projectName);
+    if(!project) { banner.style.display = 'none'; return; }
+
+    const data = await supabaseQuery('projects', 'GET', null, `?id=eq.${project.id}&select=annual_events`);
+    const events = data?.[0]?.annual_events || [];
+    if(!events.length) { banner.style.display = 'none'; return; }
+
+    // فلتر المناسبات في الـ 60 يوم القادمين
+    const now = new Date();
+    const monthNames = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+    const currentMonth = now.getMonth() + 1;
+    const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+    const upcoming = events.filter(e => {
+      const m = parseInt(e.month);
+      return m === currentMonth || m === nextMonth;
+    }).sort((a, b) => (a.month - b.month) || (a.day - b.day));
+
+    if(!upcoming.length) { banner.style.display = 'none'; return; }
+
+    banner.innerHTML = `
+      <div class="card" style="background:linear-gradient(135deg,#fef3c7 0%,#fce7f3 100%);border:1px solid #fcd34d;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+          <div style="font-size:13px;font-weight:700;color:var(--text)">🗓️ مناسبات قادمة (${upcoming.length}) — استخدمها في الخطة</div>
+          <button onclick="document.getElementById('monthly-events-banner').style.display='none'" style="background:transparent;border:none;cursor:pointer;color:var(--text2);font-size:14px">✕</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          ${upcoming.map(e => `
+            <div style="display:flex;align-items:flex-start;gap:8px;padding:6px 8px;background:rgba(255,255,255,0.5);border-radius:6px">
+              <div style="font-size:11px;font-weight:700;color:var(--text);min-width:90px">${e.day} ${monthNames[parseInt(e.month)-1]}</div>
+              <div style="flex:1;font-size:12px;color:var(--text);line-height:1.5">
+                <strong>${e.name}</strong>
+                ${e.context ? ` — <span style="color:var(--text2)">${e.context}</span>` : ''}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+    banner.style.display = 'block';
+  } catch(e) {
+    console.error('Events banner error:', e);
+    banner.style.display = 'none';
+  }
+}
+
 async function loadInsightsForMonthlyPage() {
   const banner = document.getElementById('monthly-insights-banner');
   if(!banner) return;
