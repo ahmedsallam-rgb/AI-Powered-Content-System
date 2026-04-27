@@ -779,13 +779,19 @@
       <div class="breadcrumb">
         <span onclick="showScreen('projects')">المشاريع</span>
         <span class="sep">›</span>
-        <span id="sop-project-name">Khairat Laziza</span>
+        <span id="sop-project-name">اختر مشروع</span>
         <span class="sep">›</span>
         <span>SOP الشهري</span>
       </div>
-      <div class="page-header">
-        <div class="page-title" id="sop-title">🍰 Khairat Laziza — SOP أبريل 2026</div>
-        <div class="page-sub">اتبع الخطوات بالترتيب لإنتاج محتوى الشهر كامل</div>
+      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div>
+          <div class="page-title" id="sop-title">📋 SOP الشهري</div>
+          <div class="page-sub">اتبع الخطوات بالترتيب لإنتاج محتوى الشهر كامل</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;min-width:240px">
+          <div style="font-size:11px;color:var(--text2)">اختر المشروع</div>
+          <select id="sop-project-select" onchange="onSopProjectChange()" style="padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:13px;outline:none;background:var(--surface2);color:var(--text);direction:rtl"></select>
+        </div>
       </div>
       <div class="grid-2">
         <div class="card">
@@ -1154,14 +1160,21 @@
     </div>
 
     <div id="screen-calendar" class="screen">
-      <div class="page-header">
-        <div class="page-title">📅 Content Calendar — أبريل 2026</div>
-        <div class="page-sub">كل مشاريع الأيجنسي في مكان واحد</div>
+      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div>
+          <div class="page-title" id="calendar-title">📅 Content Calendar</div>
+          <div class="page-sub">كل مشاريع الأيجنسي في مكان واحد</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <select id="calendar-project-filter" onchange="renderCalendar()" style="padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:13px;outline:none;background:var(--surface2);color:var(--text);direction:rtl;min-width:180px">
+            <option value="">كل المشاريع</option>
+          </select>
+          <button onclick="renderCalendar()" class="btn btn-sm" style="background:var(--surface2);border:0.5px solid var(--border2);color:var(--text)">🔄 تحديث</button>
+        </div>
       </div>
       <div class="card">
-        <div style="display:flex;flex-direction:column;gap:6px;">
-          <div class="content-item"><div class="content-type-dot dot-reel"></div><div style="flex:1"><div class="content-title">ريل: وصفة كنافة بالجبن</div><div class="content-platform">Khairat Laziza • IG + TK • 15 أبريل</div></div><span class="tag tag-amber">جاهز للنشر</span></div>
-          <div class="content-item"><div class="content-type-dot dot-post"></div><div style="flex:1"><div class="content-title">بوست JTBD: استثمر في المستقبل</div><div class="content-platform">العقارية • FB • 16 أبريل</div></div><span class="tag tag-green">تم النشر</span></div>
+        <div id="calendar-content" style="display:flex;flex-direction:column;gap:6px;">
+          <div style="text-align:center;padding:2rem;color:var(--text3);font-size:13px">جاري التحميل...</div>
         </div>
       </div>
     </div>
@@ -1297,6 +1310,119 @@ async function supabaseQuery(table, method = 'GET', body = null, filter = '') {
 
 const DEFAULT_PROJECTS = [];
 
+async function renderCalendar() {
+  const container = document.getElementById('calendar-content');
+  if(!container) return;
+
+  // عبّي dropdown المشاريع
+  const filterSel = document.getElementById('calendar-project-filter');
+  if(filterSel && filterSel.options.length <= 1) {
+    const projects = getProjects();
+    filterSel.innerHTML = '<option value="">كل المشاريع</option>' +
+      projects.map(p => `<option value="${p.id}">${p.emoji || '📁'} ${p.name}</option>`).join('');
+  }
+
+  const titleEl = document.getElementById('calendar-title');
+  const currentMonth = new Date().toLocaleDateString('ar-EG', { month: 'long', year: 'numeric' });
+  if(titleEl) titleEl.textContent = `📅 Content Calendar — ${currentMonth}`;
+
+  container.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text3);font-size:13px">جاري التحميل...</div>';
+
+  try {
+    const projectFilter = filterSel?.value;
+    let filter = '?content_type=eq.monthly_plan&order=created_at.desc&limit=20';
+    if(projectFilter) filter = `?content_type=eq.monthly_plan&project_id=eq.${projectFilter}&order=created_at.desc&limit=20`;
+
+    const plans = await supabaseQuery('content_memory', 'GET', null, filter);
+
+    if(!plans || plans.length === 0) {
+      container.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text3);font-size:13px">لا يوجد محتوى مولد بعد. ابدأ من صفحة "المحتوى الشهري"</div>';
+      return;
+    }
+
+    const projects = getProjects();
+    const items = [];
+
+    plans.forEach(plan => {
+      const project = projects.find(p => p.id === plan.project_id);
+      const projectName = project?.name || 'مشروع';
+      const projectEmoji = project?.emoji || '📁';
+      const platforms = (project?.platforms || []).slice(0, 2).join(' + ');
+
+      // استخرج البوستات من الـ body (rows مفصولة بـ |)
+      const lines = (plan.body || '').split('\n').filter(l => l.includes('|') && !l.includes('---') && !l.includes('موعد النشر'));
+      const posts = lines.slice(0, 5).map(line => {
+        const cells = line.split('|').map(c => c.trim()).filter(Boolean);
+        return {
+          date: cells[0] || '',
+          design: cells[1] || '',
+          caption: cells[3] || ''
+        };
+      });
+
+      posts.forEach(post => {
+        if(!post.caption) return;
+        const isReel = (post.design || '').toLowerCase().includes('reel') || (post.design || '').includes('ريل') || (post.design || '').includes('فيديو');
+        const dotClass = isReel ? 'dot-reel' : 'dot-post';
+        items.push({
+          projectName, projectEmoji, platforms,
+          date: post.date,
+          title: post.caption.substring(0, 60) + (post.caption.length > 60 ? '...' : ''),
+          design: post.design,
+          dotClass,
+          createdAt: plan.created_at
+        });
+      });
+    });
+
+    if(items.length === 0) {
+      container.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text3);font-size:13px">لا توجد بوستات في الشهر الحالي</div>';
+      return;
+    }
+
+    container.innerHTML = items.map(item => `
+      <div class="content-item">
+        <div class="content-type-dot ${item.dotClass}"></div>
+        <div style="flex:1">
+          <div class="content-title">${item.title}</div>
+          <div class="content-platform">${item.projectEmoji} ${item.projectName} • ${item.platforms} • ${item.date}</div>
+        </div>
+        <span class="tag tag-amber">جاهز للنشر</span>
+      </div>
+    `).join('');
+
+  } catch(e) {
+    console.error('Calendar render error:', e);
+    container.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--coral);font-size:13px">حدث خطأ في التحميل</div>';
+  }
+}
+
+function refreshSopProjectsDropdown() {
+  const sel = document.getElementById('sop-project-select');
+  if(!sel) return;
+  const projects = getProjects();
+  const currentName = document.getElementById('sop-project-name')?.textContent;
+  const currentVal = sel.value || (currentName !== 'اختر مشروع' ? currentName : '');
+  sel.innerHTML = '<option value="">اختر مشروع</option>' + projects.map(p =>
+    `<option value="${p.name}" ${p.name === currentVal ? 'selected' : ''}>${p.emoji || '📁'} ${p.name}</option>`
+  ).join('');
+}
+
+function onSopProjectChange() {
+  const sel = document.getElementById('sop-project-select');
+  const projectName = sel.value;
+  if(!projectName) {
+    document.getElementById('sop-project-name').textContent = 'اختر مشروع';
+    document.getElementById('sop-title').textContent = '📋 SOP الشهري';
+    return;
+  }
+  const p = getProjects().find(pr => pr.name === projectName);
+  if(!p) return;
+  document.getElementById('sop-project-name').textContent = p.name;
+  const currentMonth = new Date().toLocaleDateString('ar-EG', { month: 'long', year: 'numeric' });
+  document.getElementById('sop-title').textContent = `${p.emoji || '📁'} ${p.name} — SOP ${currentMonth}`;
+}
+
 async function manualRefreshProjects() {
   const btn = document.getElementById('projects-refresh-btn');
   if(btn) { btn.textContent = '⏳ جاري التحديث...'; btn.disabled = true; }
@@ -1424,8 +1550,13 @@ function openProjectById(id) {
   const p = getProjects().find(pr => pr.id === id);
   if(!p) return;
   document.getElementById('sop-project-name').textContent = p.name;
-  document.getElementById('sop-title').textContent = p.emoji + ' ' + p.name + ' — SOP أبريل 2026';
+  const currentMonth = new Date().toLocaleDateString('ar-EG', { month: 'long', year: 'numeric' });
+  document.getElementById('sop-title').textContent = `${p.emoji || '📁'} ${p.name} — SOP ${currentMonth}`;
   showScreen('sop');
+  setTimeout(() => {
+    const sel = document.getElementById('sop-project-select');
+    if(sel) sel.value = p.name;
+  }, 50);
   activateStep(2);
 }
 
@@ -1535,6 +1666,8 @@ function showScreen(name) {
   if(name === 'monthly') loadInsightsForMonthlyPage();
   if(name === 'analytics') refreshAnalyticsProjects();
   if(name === 'projects') loadProjectsFromSupabase();
+  if(name === 'sop') refreshSopProjectsDropdown();
+  if(name === 'calendar') renderCalendar();
 }
 
 function openProject(id) {
