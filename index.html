@@ -1734,7 +1734,7 @@ async function sendMessage() {
 }
 
 async function pollSupabaseForNewContent(projectName, month, startTime) {
-  const maxAttempts = 30;
+  const maxAttempts = 48; // 48 × 10s = 8 دقائق
   const intervalMs = 10000;
   const statusEl = () => document.getElementById('poll-status');
 
