@@ -697,9 +697,12 @@
     </div>
 
     <div id="screen-projects" class="screen">
-      <div class="page-header">
-        <div class="page-title">المشاريع</div>
-        <div class="page-sub">اختر مشروع لتبدأ SOP الشهري أو كتابة المحتوى</div>
+      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div>
+          <div class="page-title">المشاريع</div>
+          <div class="page-sub">اختر مشروع لتبدأ SOP الشهري أو كتابة المحتوى</div>
+        </div>
+        <button onclick="manualRefreshProjects()" id="projects-refresh-btn" class="btn btn-sm" style="background:var(--surface2);border:0.5px solid var(--border2);color:var(--text);white-space:nowrap">🔄 تحديث</button>
       </div>
       <div class="projects-grid" id="projects-grid"></div>
     </div>
@@ -1294,10 +1297,21 @@ async function supabaseQuery(table, method = 'GET', body = null, filter = '') {
 
 const DEFAULT_PROJECTS = [];
 
+async function manualRefreshProjects() {
+  const btn = document.getElementById('projects-refresh-btn');
+  if(btn) { btn.textContent = '⏳ جاري التحديث...'; btn.disabled = true; }
+  try {
+    await loadProjectsFromSupabase();
+    if(btn) { btn.textContent = '✅ محدّث'; setTimeout(() => { btn.textContent = '🔄 تحديث'; btn.disabled = false; }, 1500); }
+  } catch(e) {
+    if(btn) { btn.textContent = '⚠️ فشل'; setTimeout(() => { btn.textContent = '🔄 تحديث'; btn.disabled = false; }, 1500); }
+  }
+}
+
 async function loadProjectsFromSupabase() {
   try {
     const data = await supabaseQuery('projects', 'GET', null, '?select=*&order=created_at.asc');
-    if(data && data.length > 0) {
+    if(data && Array.isArray(data)) {
       const mapped = data.map(p => ({
         id: p.id, name: p.name, type: p.type || '',
         emoji: p.emoji || '📁', bg: p.bg_color || '#E8F0FE',
@@ -1306,12 +1320,11 @@ async function loadProjectsFromSupabase() {
         pain: p.pain || '', voice: p.voice || '',
         product: p.product || '', status: p.status || 'active'
       }));
-      const local = getProjects();
-      const supabaseIds = mapped.map(p => String(p.id));
-      const localOnly = local.filter(p => !supabaseIds.includes(String(p.id)));
-      saveProjects([...mapped, ...localOnly]);
+      // Supabase = single source of truth، نتجاهل أي local-only projects تماماً
+      saveProjects(mapped);
       renderProjects();
     } else {
+      saveProjects([]);
       renderProjects();
     }
   } catch(e) {
@@ -1521,6 +1534,7 @@ function showScreen(name) {
   if(map[name] !== undefined) items[map[name]].classList.add('active');
   if(name === 'monthly') loadInsightsForMonthlyPage();
   if(name === 'analytics') refreshAnalyticsProjects();
+  if(name === 'projects') loadProjectsFromSupabase();
 }
 
 function openProject(id) {
